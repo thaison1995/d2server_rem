@@ -25,7 +25,7 @@ namespace Net {
 		void CloseGameAsync(int game_id);
 
 		using create_game_handler = std::function<bool(t_d2cs_d2gs_creategamereq& req, int& game_id)>;
-		using join_game_handler = std::function<void()>;
+		using join_game_handler = std::function<bool(t_d2cs_d2gs_joingamereq& req)>;
 		void OnCreateGame(create_game_handler handler) {
 			create_game_handler_ = handler;
 		}

@@ -91,8 +91,7 @@ namespace Net {
 			req.ReadFromString(s);
 			
 			int game_id = 0;
-			bool success;
-			success = create_game_handler_ ? create_game_handler_(req, game_id) : false;
+			bool success = create_game_handler_ ? create_game_handler_(req, game_id) : false;
 			t_d2gs_d2cs_creategamereply reply;
 			reply.h.seqno = req.h.seqno;
 			reply.gameid = game_id;
@@ -105,11 +104,12 @@ namespace Net {
 			t_d2cs_d2gs_joingamereq req;
 			req.ReadFromString(s);
 
-			// TODO
+			bool success = join_game_handler_ ? join_game_handler_(req) : false;
 			t_d2gs_d2cs_joingamereply reply;
 			reply.h.seqno = req.h.seqno;
-			reply.gameid = 123;
-			reply.result = PROTO_JOINGAME_RESULT::D2GS_D2CS_JOINGAME_SUCCEED;
+			reply.gameid = req.gameid;
+			reply.result = success ? PROTO_JOINGAME_RESULT::D2GS_D2CS_JOINGAME_SUCCEED
+				: PROTO_JOINGAME_RESULT::D2GS_D2CS_JOINGAME_FAILED;
 			net_client_.Send(reply.WriteAsString());
 		});
 	}

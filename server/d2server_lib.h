@@ -126,58 +126,6 @@ extern LPD2GSINTERFACE QueryInterface(VOID);
 }
 #endif
 
-
-/* callback functions */
-extern VOID __fastcall 	CloseGame(WORD wGameId);
-
-extern VOID __fastcall 	LeaveGame(LPGAMEDATA lpGameData, WORD wGameId, WORD wCharClass,
-				DWORD dwCharLevel, DWORD dwExpLow, DWORD dwExpHigh,
-				WORD wCharStatus, LPCSTR lpCharName, LPCSTR lpCharPortrait,
-				BOOL bUnlock, DWORD dwZero1, DWORD dwZero2,
-				LPCSTR lpAccountName, PLAYERDATA PlayerData,
-				PLAYERMARK PlayerMark);
-
-extern VOID __fastcall 	GetDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
-						DWORD dwClientId, LPCSTR lpAccountName);
-
-extern VOID __fastcall 	SaveDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
-					LPCSTR lpAccountName, LPVOID lpSaveData,
-					DWORD dwSize,PLAYERDATA PlayerData);
-
-extern VOID __cdecl	ServerLogMessage(DWORD dwCount, LPCSTR lpFormat, ...);
-
-extern VOID __fastcall 	EnterGame(WORD wGameId, LPCSTR lpCharName, WORD wCharClass,
-				DWORD dwCharLevel, DWORD dwZero);
-
-extern BOOL __fastcall FindPlayerToken(LPCSTR lpCharName, DWORD dwToken, WORD wGameId,
-					LPSTR lpAccountName, LPPLAYERDATA lpPlayerData);
-
-extern VOID __fastcall 	UnlockDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
-						LPCSTR lpAccountName);
-
-extern VOID __fastcall 	RelockDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
-						LPCSTR lpAccountName);
-
-extern VOID __fastcall 	UpdateCharacterLadder(LPCSTR lpCharName, WORD wCharClass,
-					DWORD dwCharLevel, DWORD dwCharExpLow,
-					DWORD dwCharExpHigh,  WORD wCharStatus,
-					PLAYERMARK PlayerMark);	
-
-extern VOID __fastcall 	UpdateGameInformation(WORD wGameId, LPCSTR lpCharName,
-					WORD wCharClass, DWORD dwCharLevel);
-
-extern GAMEDATA __fastcall SetGameData(VOID);
-
-extern VOID __fastcall 	SaveDatabaseGuild(DWORD dwReserved1, DWORD dwReserved2,
-					DWORD dwReserved3);
-
-extern VOID __fastcall 	ReservedCallback1(DWORD dwReserved1, DWORD dwReserved2);
-
-extern VOID __fastcall 	ReservedCallback2(DWORD dwReserved1, DWORD dwReserved2,
-					DWORD dwReserved3);
-
-extern VOID __fastcall	LoadComplete(WORD wGameId, LPCSTR lpCharName, BOOL bExpansion);
-
 /* Error Codes */
 #define 	D2GS_ERROR_BASE			0x10000000
 #define		D2GS_ERROR_INTERNAL		(D2GS_ERROR_BASE+1)

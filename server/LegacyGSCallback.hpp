@@ -40,9 +40,9 @@ extern void __fastcall EnterGame(WORD wGameId, LPCSTR lpCharName, WORD wCharClas
 
 
 extern BOOL __fastcall FindPlayerToken(LPCSTR lpCharName, DWORD dwToken, WORD wGameId,
-	LPSTR lpAccountName, LPPLAYERDATA lpPlayerData)
+	LPSTR lpAccountName, LPPLAYERDATA lpPlayerData, int a1, int a2, int a3, int a4)
 {
-	return false;
+	return true;
 }
 
 

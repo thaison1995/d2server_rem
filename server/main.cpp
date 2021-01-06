@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 	LOG(INFO) << "Initializing D2Server REmastered";
 
 	Net::NetManagerRef net_manager =
-		std::make_shared<Net::NetManager>("172.24.103.57", 6130, "172.24.103.57", 6114);
+		std::make_shared<Net::NetManager>("172.31.49.39", 6130, "172.31.49.39", 6114);
 
 	LOG(INFO) << "Bringing up d2server";
 

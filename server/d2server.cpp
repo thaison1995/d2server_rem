@@ -188,10 +188,12 @@ namespace Server {
 	}
 
 	void D2Server::ServerLoop() {
+		LOG(WARNING) << "Waiting for auth from D2CS";
 		while (!net_manager_->d2cs_client().authed()) {
 			Sleep(1000);
 		}
-		LOG(WARNING) << "Waiting for auth from D2CS";
+
+		LOG(WARNING) << "Setting up game server handlers";
 		net_manager_->d2cs_client().OnCreateGame([this](t_d2cs_d2gs_creategamereq& req, int& game_id) -> bool {
 			int game_flag = 0x04;
 			if (req.expansion) game_flag |= 0x100000;
@@ -200,8 +202,8 @@ namespace Server {
 			if (req.difficulty <= 2) game_flag |= ((req.difficulty) << 0x0c);
 			unsigned short out_game_id = 0;
 			LOG(INFO) << "Creating game " << req.gamename << " with flag " << game_flag
-				<< " (expansion=" << req.expansion << ",hardcore=" << req.hardcore << ",ladder=" << req.ladder
-				<< ",difficulty=" << req.difficulty << ")";
+				<< " (expansion=" << (int)req.expansion << ",hardcore=" << (int)req.hardcore 
+				<< ",ladder=" << (int)req.ladder<< ",difficulty=" << (int)req.difficulty << ")";
 			int result = D2Funcs.D2GAME_CreateGame(req.gamename.c_str(), req.gamepass.c_str(), req.gamedesc.c_str(), 
 				game_flag, 0x11, 0x22, 0x33, &out_game_id);
 			if (result) {
@@ -213,6 +215,18 @@ namespace Server {
 				LOG(ERROR) << "Failed to create the game";
 				return false;
 			}
+		});
+		net_manager_->d2cs_client().OnJoinGame([this](t_d2cs_d2gs_joingamereq& req) -> bool {
+			JoinRequest r;
+			r.token = req.token;
+			r.game_id = req.gameid;
+			r.charname = req.charname;
+			r.acctname = req.acctname;
+			r.client_ipaddr = req.client_ipaddr;
+			pending_join_requests_[req.token] = r;
+			LOG(INFO) << "Added request for " << req.charname << "(*" << req.acctname << ") to join game "
+				<< req.gameid << " (client address is " << req.client_ipaddr << ")";
+			return true;
 		});
 		net_manager_->d2cs_client().SetGSInfoAsync(100, 0);
 
