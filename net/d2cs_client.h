@@ -24,10 +24,14 @@ namespace Net {
 		void UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, int char_class, int addr);
 		void CloseGameAsync(int game_id);
 
-		using create_game_handler = std::function<void()>;
+		using create_game_handler = std::function<bool(t_d2cs_d2gs_creategamereq& req, int& game_id)>;
 		using join_game_handler = std::function<void()>;
-		void OnCreateGame(create_game_handler handler);
-		void OnJoinGame(join_game_handler handler);
+		void OnCreateGame(create_game_handler handler) {
+			create_game_handler_ = handler;
+		}
+		void OnJoinGame(join_game_handler handler) {
+			join_game_handler_ = handler;
+		}
 
 	private:
 		D2XSClient<t_d2cs_d2gs_header> net_client_;

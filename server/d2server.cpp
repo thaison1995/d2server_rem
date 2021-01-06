@@ -192,6 +192,28 @@ namespace Server {
 			Sleep(1000);
 		}
 		LOG(WARNING) << "Waiting for auth from D2CS";
+		net_manager_->d2cs_client().OnCreateGame([this](t_d2cs_d2gs_creategamereq& req, int& game_id) -> bool {
+			int game_flag = 0x04;
+			if (req.expansion) game_flag |= 0x100000;
+			if (req.hardcore)  game_flag |= 0x800;
+			if (req.ladder)    game_flag |= 0x200000;
+			if (req.difficulty <= 2) game_flag |= ((req.difficulty) << 0x0c);
+			unsigned short out_game_id = 0;
+			LOG(INFO) << "Creating game " << req.gamename << " with flag " << game_flag
+				<< " (expansion=" << req.expansion << ",hardcore=" << req.hardcore << ",ladder=" << req.ladder
+				<< ",difficulty=" << req.difficulty << ")";
+			int result = D2Funcs.D2GAME_CreateGame(req.gamename.c_str(), req.gamepass.c_str(), req.gamedesc.c_str(), 
+				game_flag, 0x11, 0x22, 0x33, &out_game_id);
+			if (result) {
+				LOG(INFO) << "Created successfully. Game id is " << out_game_id;
+				game_id = out_game_id;
+				return true;
+			}
+			else {
+				LOG(ERROR) << "Failed to create the game";
+				return false;
+			}
+		});
 		net_manager_->d2cs_client().SetGSInfoAsync(100, 0);
 
 		LOG(INFO) << "Entering D2 server loop";

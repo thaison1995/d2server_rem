@@ -162,6 +162,9 @@ _d2f D2Funcs = { 0 }; void SetupD2Funcs() {
 		EXFUNCPTR(D2GAME, SetupCallbackTable, int, __stdcall, (void*), -10048)
 		EXFUNCPTR(D2GAME, SetupCallback01, int, __stdcall, (void*, int*), -10037)
 		EXFUNCPTR(D2GAME, SetupCallback02, int, __stdcall, (), -10038)
+		EXFUNCPTR(D2GAME, CreateGame, int, __stdcall, (const char* lpGameName, const char* lpGamePass,
+			const char* lpGameDesc, DWORD dwGameFlag,
+			BYTE bTemplate, BYTE bReserved1, BYTE bReserved2, LPWORD pwGameId), -10044)
 
 		EXFUNCPTR(STORM, SFileSetPlatform, void, __stdcall, (int dwPlatform), -278)
 		EXFUNCPTR(STORM, SFileSetLocale, void, __stdcall, (WORD langId), -272)

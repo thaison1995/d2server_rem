@@ -57,7 +57,7 @@ def gen_code():
             else:
                 members_c += '  %s %s;\n' % (member_type, member_name)
                 if member_type == 'string':
-                    read_c  += '    std::getline(iss, %s);\n' % member_name
+                    read_c  += "    std::getline(iss, %s, '\\0');\n" % member_name
                     write_c += '    oss << %s;\n' % member_name
                     write_c += '    oss.put((char)0);\n'
                 else:

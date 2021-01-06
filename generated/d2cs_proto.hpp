@@ -56,7 +56,7 @@ struct t_d2cs_d2gs_authreq
     iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
     iss.read((char*)&sessionnum, sizeof(bn_int));
     iss.read((char*)&signlen, sizeof(bn_int));
-    std::getline(iss, realm_name);
+    std::getline(iss, realm_name, '\0');
   }
   std::string WriteAsString() {
     h.type = 16;
@@ -285,7 +285,7 @@ struct t_d2cs_d2gs_setconffile
     iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
     iss.read((char*)&size, sizeof(bn_int));
     iss.read((char*)&reserved1, sizeof(bn_int));
-    std::getline(iss, conf);
+    std::getline(iss, conf, '\0');
   }
   std::string WriteAsString() {
     h.type = 22;
@@ -324,12 +324,12 @@ struct t_d2cs_d2gs_creategamereq
     iss.read((char*)&expansion, sizeof(bn_byte));
     iss.read((char*)&difficulty, sizeof(PROTO_GAME_DIFFICULTY));
     iss.read((char*)&hardcore, sizeof(bn_byte));
-    std::getline(iss, gamename);
-    std::getline(iss, gamepass);
-    std::getline(iss, gamedesc);
-    std::getline(iss, creator_acctname);
-    std::getline(iss, creator_charname);
-    std::getline(iss, creator_ipaddr);
+    std::getline(iss, gamename, '\0');
+    std::getline(iss, gamepass, '\0');
+    std::getline(iss, gamedesc, '\0');
+    std::getline(iss, creator_acctname, '\0');
+    std::getline(iss, creator_charname, '\0');
+    std::getline(iss, creator_ipaddr, '\0');
   }
   std::string WriteAsString() {
     h.type = 32;
@@ -401,9 +401,9 @@ struct t_d2cs_d2gs_joingamereq
     iss.read((char*)&gameid, sizeof(bn_int));
     iss.read((char*)&token, sizeof(bn_int));
     iss.read((char*)&vip_expire, sizeof(bn_int));
-    std::getline(iss, charname);
-    std::getline(iss, acctname);
-    std::getline(iss, client_ipaddr);
+    std::getline(iss, charname, '\0');
+    std::getline(iss, acctname, '\0');
+    std::getline(iss, client_ipaddr, '\0');
   }
   std::string WriteAsString() {
     h.type = 33;
@@ -470,7 +470,7 @@ struct t_d2gs_d2cs_updategameinfo
     iss.read((char*)&charlevel, sizeof(bn_int));
     iss.read((char*)&charclass, sizeof(bn_int));
     iss.read((char*)&addr, sizeof(bn_int));
-    std::getline(iss, charname);
+    std::getline(iss, charname, '\0');
   }
   std::string WriteAsString() {
     h.type = 34;

@@ -41,7 +41,12 @@ namespace Net {
 			return (char*)&header_;
 		}
 		char* body_data() {
-			return &body_.front();
+			if (body_size() > 0) {
+				return &body_.front();
+			}
+			else {
+				return nullptr;
+			}
 		}
 		bn_short packet_type() {
 			return header_.type;
@@ -52,7 +57,9 @@ namespace Net {
 			s.resize(packet_size);
 
 			memcpy(&s.front(), &header_, sizeof(T));
-			memcpy(&s.front() + sizeof(T), &body_.front(), body_size());
+			if (body_size() > 0) {
+				memcpy(&s.front() + sizeof(T), &body_.front(), body_size());
+			}
 
 			return s;
 		}

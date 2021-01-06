@@ -89,13 +89,28 @@ namespace Net {
 		net_client_.OnPacket(t_d2cs_d2gs_creategamereq_typecode, [this](std::string s) {
 			t_d2cs_d2gs_creategamereq req;
 			req.ReadFromString(s);
-			// TODO
+			
+			int game_id = 0;
+			bool success;
+			success = create_game_handler_ ? create_game_handler_(req, game_id) : false;
+			t_d2gs_d2cs_creategamereply reply;
+			reply.h.seqno = req.h.seqno;
+			reply.gameid = game_id;
+			reply.result = success ? PROTO_CREATEGAME_RESULT::D2GS_D2CS_CREATEGAME_SUCCEED 
+				: PROTO_CREATEGAME_RESULT::D2GS_D2CS_CREATEGAME_FAILED;
+			net_client_.Send(reply.WriteAsString());
 		});
 
 		net_client_.OnPacket(t_d2cs_d2gs_joingamereq_typecode, [this](std::string s) {
 			t_d2cs_d2gs_joingamereq req;
 			req.ReadFromString(s);
+
 			// TODO
+			t_d2gs_d2cs_joingamereply reply;
+			reply.h.seqno = req.h.seqno;
+			reply.gameid = 123;
+			reply.result = PROTO_JOINGAME_RESULT::D2GS_D2CS_JOINGAME_SUCCEED;
+			net_client_.Send(reply.WriteAsString());
 		});
 	}
 
@@ -124,14 +139,6 @@ namespace Net {
 		req.h.seqno = seqno_++;
 		req.gameid = game_id;
 		net_client_.Send(req.WriteAsString());
-	}
-
-	void D2CSClient::OnCreateGame(create_game_handler handler)
-	{
-	}
-
-	void D2CSClient::OnJoinGame(join_game_handler handler)
-	{
 	}
 
 }
