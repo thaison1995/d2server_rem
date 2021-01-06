@@ -1,0 +1,143 @@
+t_d2cs_d2gs_authreq 0x10
+    t_d2cs_d2gs_header  h;
+	bn_int			sessionnum;
+	bn_int			signlen;
+	string          realm_name;
+end
+
+t_d2gs_d2cs_authreply 0x11
+    t_d2cs_d2gs_header  h;
+	bn_int			version;
+	bn_int			checksum;
+	bn_int			randnum;
+	bn_int			signlen;
+	bn_basic		sign[128];
+end
+
+t_d2cs_d2gs_authreply 0x11
+    t_d2cs_d2gs_header  h;
+	AUTHREPLY			reply;
+end
+
+enum AUTHREPLY bn_int
+    D2CS_D2GS_AUTHREPLY_SUCCEED			0x00
+    D2CS_D2GS_AUTHREPLY_BAD_VERSION		0x01
+    D2CS_D2GS_AUTHREPLY_BAD_CHECKSUM	0x02
+end
+
+t_d2gs_d2cs_setgsinfo 0x12
+    t_d2cs_d2gs_header  h;
+	bn_int			maxgame;
+	bn_int			gameflag;
+end
+
+t_d2cs_d2gs_echoreq 0x13
+    t_d2cs_d2gs_header  h;
+end
+
+t_d2gs_d2cs_getconf 0x15
+    t_d2cs_d2gs_header  h;
+end
+
+t_d2gs_d2cs_echoreply 0x13
+    t_d2cs_d2gs_header  h;
+end
+
+t_d2cs_d2gs_control 0x14
+    t_d2cs_d2gs_header  h;
+	CONTROL_CMD                  cmd;
+	bn_int                  value;
+end
+
+enum CONTROL_CMD bn_int
+    D2CS_D2GS_CONTROL_CMD_RESTART	0x01
+    D2CS_D2GS_CONTROL_CMD_SHUTDOWN	0x02
+    D2CS_D2GS_CONTROL_VALUE_DEFAULT	0x00
+end
+
+t_d2cs_d2gs_setinitinfo 0x15
+    t_d2cs_d2gs_header  h;
+	bn_int			time;
+	bn_int			gs_id;
+	bn_int			ac_version;
+end
+
+t_d2cs_d2gs_setconffile 0x16
+    t_d2cs_d2gs_header  h;
+	bn_int			size;
+	bn_int			reserved1;
+	string          conf;
+end
+
+t_d2cs_d2gs_creategamereq 0x20
+    t_d2cs_d2gs_header  h;
+	bn_byte			ladder;
+	bn_byte			expansion;
+	GAME_DIFFICULTY	difficulty;
+	bn_byte			hardcore;
+	string          gamename;
+	string          gamepass;
+	string          gamedesc;
+	string          creator_acctname;
+	string          creator_charname;
+	string          creator_ipaddr;
+end
+
+enum GAME_DIFFICULTY bn_byte
+    D2GAME_DIFFICULTY_NORMAL	0
+    D2GAME_DIFFICULTY_NIGHTMARE	1
+    D2GAME_DIFFICULTY_HELL		2
+end
+
+t_d2gs_d2cs_creategamereply 0x20
+    t_d2cs_d2gs_header  h;
+	CREATEGAME_RESULT			result;
+	bn_int			gameid;
+end
+
+enum CREATEGAME_RESULT bn_int
+    D2GS_D2CS_CREATEGAME_SUCCEED	0
+    D2GS_D2CS_CREATEGAME_FAILED		1
+end
+
+t_d2cs_d2gs_joingamereq 0x21
+    t_d2cs_d2gs_header  h;
+	bn_int			gameid;
+	bn_int			token;
+	bn_int			vip_expire;
+	string          charname;
+	string          acctname;
+	string          client_ipaddr;
+end
+
+t_d2gs_d2cs_joingamereply 0x21
+    t_d2cs_d2gs_header  h;
+	JOINGAME_RESULT	result;
+	bn_int			gameid;
+end
+
+enum JOINGAME_RESULT bn_int
+    D2GS_D2CS_JOINGAME_SUCCEED			0
+    D2GS_D2CS_JOINGAME_FAILED			1
+end
+
+t_d2gs_d2cs_updategameinfo 0x22
+    t_d2cs_d2gs_header  h;
+	UPDATEGAMEINFO_FLAG	flag;
+	bn_int			gameid;
+	bn_int			charlevel;
+	bn_int			charclass;
+	bn_int			addr;
+	string          charname;
+end
+
+enum UPDATEGAMEINFO_FLAG bn_int
+    D2GS_D2CS_UPDATEGAMEINFO_FLAG_UPDATE	0
+    D2GS_D2CS_UPDATEGAMEINFO_FLAG_ENTER		1
+    D2GS_D2CS_UPDATEGAMEINFO_FLAG_LEAVE		2
+end
+
+t_d2gs_d2cs_closegame		0x23
+    t_d2cs_d2gs_header  h;
+	bn_int			gameid;
+end

@@ -24,4 +24,16 @@ typedef unsigned long		bn_long;	/* 4 bytes, not 8 bytes, fix me */
 #define bn_ntohl(a)		(a)
 #endif
 
+#pragma pack(push, 1)
+typedef struct
+{
+	bn_short	size;
+	bn_short	type;
+	bn_int		seqno;			/* seqno, set by the sender */
+} t_d2cs_d2gs_header;
+#pragma pack(pop)
+
+#define CONNECT_CLASS_D2GS_TO_D2CS		0x91
+#define CONNECT_CLASS_D2GS_TO_D2DBS		0x88
+
 #endif /* INCLUDED_BN_TYPES_H */

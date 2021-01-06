@@ -143,13 +143,18 @@ namespace Net {
 		D2DBSClient(const D2DBSClient&) = delete;
 		D2DBSClient(asio::io_context& io_context,
 			const std::string& server_host, const int server_port)
-			: net_client_("D2CSClient", io_context, server_host, server_port) {
+			: net_client_("d2dbs", io_context, server_host, server_port) {
 			connected_ = false;
 			net_client_.OnError([&](std::error_code ec) {
 				connected_ = false;
+				throw std::exception("D2DBS Connection Error");
 			});
 			net_client_.Connect([&]() {
 				connected_ = true;
+				std::string bnclass;
+				bnclass.resize(1);
+				bnclass[0] = (char)CONNECT_CLASS_D2GS_TO_D2DBS;
+				net_client_.Send(bnclass);
 			});
 		}
 

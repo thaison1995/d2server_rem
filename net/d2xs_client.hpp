@@ -25,38 +25,40 @@ namespace Net {
 		const static size_t response_header_length = sizeof(T);
 
 		D2XSResponse() {
-			reset();
+			memset(&header_, 0, sizeof(T));
 		}
 		bool decode_header() {
-			packet_.reserve(header_.size);
+			body_.resize(body_size());
 			return true;
 		}
 		size_t header_size() const {
 			return response_header_length;
 		}
-		size_t packet_size() const {
-			if (!readable_) {
-				return 0;
-			}
-			return header_.size;
+		size_t body_size() const {
+			return header_.size - sizeof(T);
 		}
 		char* header_data() {
 			return (char*)&header_;
 		}
-		char* packet_data() {
-			return &packet_.front();
+		char* body_data() {
+			return &body_.front();
 		}
 		bn_short packet_type() {
 			return header_.type;
 		}
-		void reset() {
-			memset(&header_, 0, sizeof(T));
-			readable_ = false;
+		std::string packet() const {
+			size_t packet_size = sizeof(T) + body_size();
+			std::string s;
+			s.resize(packet_size);
+
+			memcpy(&s.front(), &header_, sizeof(T));
+			memcpy(&s.front() + sizeof(T), &body_.front(), body_size());
+
+			return s;
 		}
 	private:
-		bool readable_;
 		T header_;
-		std::string packet_;
+		std::string body_;
 	};
 
 
@@ -66,12 +68,13 @@ namespace Net {
 		using on_packet_handler = std::function<void(std::string)>;
 		using on_connect_handler = std::function<void()>;
 		using on_error_handler = std::function<void(std::error_code)>;
+		using d2xs_request = std::string;
 
 		D2XSClient(const D2XSClient&) = delete;
 		D2XSClient(std::string client_name, asio::io_context& io_context, 
 			const std::string& server_host, const int server_port) :
 			client_name_(client_name), io_context_(io_context), socket_(io_context) {
-			on_packet_handlers_.reserve(0xFF);
+			on_packet_handlers_.resize(0xFF);
 
 			std::error_code ec;
 			asio::ip::address ip_address = asio::ip::address::from_string(server_host, ec);
@@ -91,13 +94,25 @@ namespace Net {
 			do_connect(endpoint_, callback);
 		}
 
+		void Send(d2xs_request& request) {
+			asio::post(io_context_,
+				[this, request]()
+			{
+				bool write_in_progress = !request_queue_.empty();
+				request_queue_.push_back(request);
+				if (!write_in_progress)
+				{
+					do_write();
+				}
+			});
+		}
+
 		void Close() {
 			LOG(INFO) << "[" << client_name_ << "] Closing connection";
 			asio::post(io_context_, [this]() { socket_.close(); });
 		}
 
 	private:
-		using d2xs_request = std::string;
 		using request_queue = std::deque<d2xs_request>;
 
 		asio::ip::tcp::endpoint endpoint_;
@@ -121,6 +136,7 @@ namespace Net {
 					if (callback) {
 						callback();
 					}
+					do_read_header();
 				}
 				else {
 					LOG(ERROR) << "[" << client_name_ << "] Error while connecting: (" << ec.value() << ") " << ec.message();
@@ -155,7 +171,7 @@ namespace Net {
 		void do_read_packet()
 		{
 			asio::async_read(socket_,
-				asio::buffer(response_.packet_data(), response_.packet_size()),
+				asio::buffer(response_.body_data(), response_.body_size()),
 				[this](std::error_code ec, std::size_t /*length*/)
 			{
 				if (!ec)
@@ -164,7 +180,7 @@ namespace Net {
 					if (on_packet_handlers_[response_.packet_type()]) {
 						LOG(INFO) << "[" << client_name_ << "] Got packet type " << response_.packet_type();
 						// make a copy, otherwise buffer can be tempered by one of those following responses
-						on_packet_handlers_[response_.packet_type()](std::string(response_.packet_data(), response_.packet_size()));
+						on_packet_handlers_[response_.packet_type()](response_.packet());
 					}
 
 					do_read_header();

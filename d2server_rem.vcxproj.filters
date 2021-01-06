@@ -31,6 +31,12 @@
     <Filter Include="Header Files\server">
       <UniqueIdentifier>{9de01dd7-7779-49ef-8b83-3eaf7c652fd2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\generated">
+      <UniqueIdentifier>{31a4dde8-1aa9-4db3-9979-c01b8b645df9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\generated">
+      <UniqueIdentifier>{29bde04c-fcf3-4356-b3cc-3ec2b2153cbf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game\MPQHelper.cpp">
@@ -115,6 +121,9 @@
     </ClInclude>
     <ClInclude Include="net\d2dbs_client.h">
       <Filter>Header Files\net</Filter>
+    </ClInclude>
+    <ClInclude Include="generated\d2cs_proto.hpp">
+      <Filter>Header Files\generated</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

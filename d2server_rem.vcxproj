@@ -168,6 +168,7 @@
     <ClInclude Include="game\Misc.h" />
     <ClInclude Include="game\MPQHelper.h" />
     <ClInclude Include="game\Offsets.h" />
+    <ClInclude Include="generated\d2cs_proto.hpp" />
     <ClInclude Include="net\bnethash.h" />
     <ClInclude Include="net\bn_types.h" />
     <ClInclude Include="net\connection.h" />
