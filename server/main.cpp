@@ -3,6 +3,12 @@
 
 #include "net/net_manager.h"
 #include "server/d2server.h"
+#include "global.h"
+
+void global_shutdown_handler(ShutdownReason reason, ShutdownAction action) {
+	LOG(INFO) << "Shutting down because: " << reason;
+	ExitProcess(0);
+}
 
 int main(int argc, char** argv)
 {

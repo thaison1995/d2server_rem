@@ -154,6 +154,7 @@
     <ClCompile Include="game\MPQHelper.cpp" />
     <ClCompile Include="game\Offsets.cpp" />
     <ClCompile Include="net\bnethash.cpp" />
+    <ClCompile Include="net\d2cs_client.cpp" />
     <ClCompile Include="net\net_manager.cpp" />
     <ClCompile Include="server\d2server.cpp" />
     <ClCompile Include="server\main.cpp" />
@@ -179,6 +180,7 @@
     <ClInclude Include="server\colorcode.h" />
     <ClInclude Include="server\d2server.h" />
     <ClInclude Include="server\d2server_lib.h" />
+    <ClInclude Include="server\global.h" />
     <ClInclude Include="server\LegacyGSCallback.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

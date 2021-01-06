@@ -59,12 +59,16 @@ struct t_d2cs_d2gs_authreq
     std::getline(iss, realm_name);
   }
   std::string WriteAsString() {
+    h.type = 16;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&sessionnum, sizeof(bn_int));
     oss.write((char*)&signlen, sizeof(bn_int));
     oss << realm_name;
     oss.put((char)0);
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -89,6 +93,7 @@ struct t_d2gs_d2cs_authreply
     iss.read((char*)&sign[0], sizeof(bn_basic) * 128);
   }
   std::string WriteAsString() {
+    h.type = 17;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&version, sizeof(bn_int));
@@ -96,6 +101,9 @@ struct t_d2gs_d2cs_authreply
     oss.write((char*)&randnum, sizeof(bn_int));
     oss.write((char*)&signlen, sizeof(bn_int));
     oss.write((char*)&sign[0], sizeof(bn_basic) * 128);
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -112,9 +120,13 @@ struct t_d2cs_d2gs_authreply
     iss.read((char*)&reply, sizeof(PROTO_AUTHREPLY));
   }
   std::string WriteAsString() {
+    h.type = 17;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&reply, sizeof(PROTO_AUTHREPLY));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -133,10 +145,14 @@ struct t_d2gs_d2cs_setgsinfo
     iss.read((char*)&gameflag, sizeof(bn_int));
   }
   std::string WriteAsString() {
+    h.type = 18;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&maxgame, sizeof(bn_int));
     oss.write((char*)&gameflag, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -151,8 +167,12 @@ struct t_d2cs_d2gs_echoreq
     iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
   }
   std::string WriteAsString() {
+    h.type = 19;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -167,8 +187,12 @@ struct t_d2gs_d2cs_getconf
     iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
   }
   std::string WriteAsString() {
+    h.type = 21;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -183,8 +207,12 @@ struct t_d2gs_d2cs_echoreply
     iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
   }
   std::string WriteAsString() {
+    h.type = 19;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -203,10 +231,14 @@ struct t_d2cs_d2gs_control
     iss.read((char*)&value, sizeof(bn_int));
   }
   std::string WriteAsString() {
+    h.type = 20;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&cmd, sizeof(PROTO_CONTROL_CMD));
     oss.write((char*)&value, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -227,11 +259,15 @@ struct t_d2cs_d2gs_setinitinfo
     iss.read((char*)&ac_version, sizeof(bn_int));
   }
   std::string WriteAsString() {
+    h.type = 21;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&time, sizeof(bn_int));
     oss.write((char*)&gs_id, sizeof(bn_int));
     oss.write((char*)&ac_version, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -252,12 +288,16 @@ struct t_d2cs_d2gs_setconffile
     std::getline(iss, conf);
   }
   std::string WriteAsString() {
+    h.type = 22;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&size, sizeof(bn_int));
     oss.write((char*)&reserved1, sizeof(bn_int));
     oss << conf;
     oss.put((char)0);
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -292,6 +332,7 @@ struct t_d2cs_d2gs_creategamereq
     std::getline(iss, creator_ipaddr);
   }
   std::string WriteAsString() {
+    h.type = 32;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&ladder, sizeof(bn_byte));
@@ -310,6 +351,9 @@ struct t_d2cs_d2gs_creategamereq
     oss.put((char)0);
     oss << creator_ipaddr;
     oss.put((char)0);
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -328,10 +372,14 @@ struct t_d2gs_d2cs_creategamereply
     iss.read((char*)&gameid, sizeof(bn_int));
   }
   std::string WriteAsString() {
+    h.type = 32;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&result, sizeof(PROTO_CREATEGAME_RESULT));
     oss.write((char*)&gameid, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -358,6 +406,7 @@ struct t_d2cs_d2gs_joingamereq
     std::getline(iss, client_ipaddr);
   }
   std::string WriteAsString() {
+    h.type = 33;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&gameid, sizeof(bn_int));
@@ -369,6 +418,9 @@ struct t_d2cs_d2gs_joingamereq
     oss.put((char)0);
     oss << client_ipaddr;
     oss.put((char)0);
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -387,10 +439,14 @@ struct t_d2gs_d2cs_joingamereply
     iss.read((char*)&gameid, sizeof(bn_int));
   }
   std::string WriteAsString() {
+    h.type = 33;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&result, sizeof(PROTO_JOINGAME_RESULT));
     oss.write((char*)&gameid, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -417,6 +473,7 @@ struct t_d2gs_d2cs_updategameinfo
     std::getline(iss, charname);
   }
   std::string WriteAsString() {
+    h.type = 34;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&flag, sizeof(PROTO_UPDATEGAMEINFO_FLAG));
@@ -426,6 +483,9 @@ struct t_d2gs_d2cs_updategameinfo
     oss.write((char*)&addr, sizeof(bn_int));
     oss << charname;
     oss.put((char)0);
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };
@@ -442,9 +502,13 @@ struct t_d2gs_d2cs_closegame
     iss.read((char*)&gameid, sizeof(bn_int));
   }
   std::string WriteAsString() {
+    h.type = 35;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&gameid, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
     return oss.str();
   }
 };

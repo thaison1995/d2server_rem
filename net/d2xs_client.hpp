@@ -94,7 +94,7 @@ namespace Net {
 			do_connect(endpoint_, callback);
 		}
 
-		void Send(d2xs_request& request) {
+		void Send(d2xs_request request) {
 			asio::post(io_context_,
 				[this, request]()
 			{
@@ -177,10 +177,15 @@ namespace Net {
 				if (!ec)
 				{
 					// handle pkt
-					if (on_packet_handlers_[response_.packet_type()]) {
-						LOG(INFO) << "[" << client_name_ << "] Got packet type " << response_.packet_type();
+					bn_short packet_type = response_.packet_type();
+					LOG(INFO) << "[" << client_name_ << "] Got packet type " << packet_type;
+
+					if (on_packet_handlers_[packet_type]) {
 						// make a copy, otherwise buffer can be tempered by one of those following responses
-						on_packet_handlers_[response_.packet_type()](response_.packet());
+						on_packet_handlers_[packet_type](response_.packet());
+					}
+					else {
+						LOG(WARNING) << "[" << client_name_ << "] No handler for packet type " << packet_type;
 					}
 
 					do_read_header();

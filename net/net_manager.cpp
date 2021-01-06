@@ -1,11 +1,20 @@
 #include "net_manager.h"
+#include "server/global.h"
 
 namespace Net {
 	NetManager::NetManager(const std::string& d2cs_host, const int d2cs_port,
 		const std::string& d2dbs_host, const int d2dbs_port) :
 		io_context_(), d2cs_client_(io_context_, d2cs_host, d2cs_port),
 		d2dbs_client_(io_context_, d2dbs_host, d2dbs_port) {
-		asio_thread_ = std::thread([this]() { io_context_.run(); });
+		asio_thread_ = std::thread([this]() {
+			try {
+				io_context_.run();
+			}
+			catch (const std::exception& e) {
+				LOG(ERROR) << "Exception in asio thread, shutting down";
+				global_shutdown_handler(ShutdownReason::NET_FAILURE);
+			}
+		});
 		LOG(INFO) << "NetManager initialized";
 		int n = 0;
 		while (!d2cs_client_.connected() && n < 10) {

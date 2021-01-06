@@ -11,35 +11,37 @@ namespace Net {
 	public:
 		D2CSClient(const D2CSClient&) = delete;
 		D2CSClient(asio::io_context& io_context,
-			const std::string& server_host, const int server_port)
-			: net_client_("d2cs", io_context, server_host, server_port) {
-			connected_ = false;
-			net_client_.OnError([&](std::error_code ec) {
-				connected_ = false;
-				throw std::exception("D2CS Connection Error");
-			});
-			net_client_.Connect([&]() {
-				connected_ = true;
-				std::string bnclass;
-				bnclass.resize(1);
-				bnclass[0] = (char)CONNECT_CLASS_D2GS_TO_D2CS;
-				net_client_.Send(bnclass);
-			});
-		}
+			const std::string& server_host, const int server_port);
 
 		bool connected() const {
 			return connected_;
 		}
+		bool authed() const {
+			return authed_;
+		}
 
 		void SetGSInfoAsync(int max_game, int game_flag);
-		void UpdateGameInfoAsync(int flag, int game_id, int char_level, int char_class, int addr);
+		void UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, int char_class, int addr);
 		void CloseGameAsync(int game_id);
 
-		std::future<std::string> GetConfAsync();
+		using create_game_handler = std::function<void()>;
+		using join_game_handler = std::function<void()>;
+		void OnCreateGame(create_game_handler handler);
+		void OnJoinGame(join_game_handler handler);
 
 	private:
 		D2XSClient<t_d2cs_d2gs_header> net_client_;
 		bool connected_;
+		std::atomic<int> seqno_;
+
+		std::string realm_name_;
+		int session_num_;
+		bool authed_;
+
+		create_game_handler create_game_handler_;
+		join_game_handler join_game_handler_;
+
+		void setup_handlers();
 	};
 }
 

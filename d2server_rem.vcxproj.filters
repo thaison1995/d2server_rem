@@ -60,6 +60,9 @@
     <ClCompile Include="server\d2server.cpp">
       <Filter>Source Files\server</Filter>
     </ClCompile>
+    <ClCompile Include="net\d2cs_client.cpp">
+      <Filter>Source Files\net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="net\bn_types.h">
@@ -124,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="generated\d2cs_proto.hpp">
       <Filter>Header Files\generated</Filter>
+    </ClInclude>
+    <ClInclude Include="server\global.h">
+      <Filter>Header Files\server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

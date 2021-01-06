@@ -70,8 +70,12 @@ def gen_code():
         methods_c += read_c;
         methods_c += "  }\n";
         methods_c += "  std::string WriteAsString() {\n";
+        methods_c += "    h.type = %d;\n" % (packet_code)
         methods_c += "    std::ostringstream oss;\n";
         methods_c += write_c;
+        methods_c += "    h.size = (bn_short)oss.tellp();\n"
+        methods_c += "    oss.seekp(0);\n"
+        methods_c += "    oss.write((char*)&h.size, sizeof(bn_int));\n"
         methods_c += "    return oss.str();\n";
         methods_c += "  }\n";
         f.write("""#define %s_typecode %s

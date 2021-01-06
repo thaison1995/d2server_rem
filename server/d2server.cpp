@@ -188,6 +188,12 @@ namespace Server {
 	}
 
 	void D2Server::ServerLoop() {
+		while (!net_manager_->d2cs_client().authed()) {
+			Sleep(1000);
+		}
+		LOG(WARNING) << "Waiting for auth from D2CS";
+		net_manager_->d2cs_client().SetGSInfoAsync(100, 0);
+
 		LOG(INFO) << "Entering D2 server loop";
 		while (1) {
 			D2Funcs.D2GAME_10040();
