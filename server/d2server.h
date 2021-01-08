@@ -23,6 +23,8 @@ namespace Server {
 		D2Server(bool legacy, Net::NetManagerRef net_manager);
 		void Run();
 
+		void CallbackGetDatabaseCharacter(std::string acctname, std::string charname, int client_id);
+
 	private:
 		bool legacy_;
 		D2GSINFO gs_info_;
@@ -30,6 +32,15 @@ namespace Server {
 		D2PoolManagerStrc* game_pool_managers_;
 		Net::NetManagerRef net_manager_;
 		std::unordered_map<join_request_token, JoinRequest> pending_join_requests_;
+		
+		struct GamePlayer {
+			std::string charname;
+			std::string acctname;
+			int game_id;
+			int client_id;
+		};
+		std::unordered_map<std::string, GamePlayer> players_;
+		std::mutex mutex_;
 
 		void PatchD2();
 		int ServerInit();

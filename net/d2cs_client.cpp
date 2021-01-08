@@ -8,6 +8,7 @@ namespace Net {
 		const std::string& server_host, const int server_port)
 		: net_client_("d2cs", io_context, server_host, server_port) {
 		connected_ = false;
+		authed_ = false;
 		net_client_.OnError([&](std::error_code ec) {
 			connected_ = false;
 			throw std::exception("D2CS Connection Error");
@@ -24,7 +25,7 @@ namespace Net {
 	}
 
 	void D2CSClient::setup_handlers() {
-		net_client_.OnPacket(t_d2cs_d2gs_authreq_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_authreq_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_authreq req;
 			req.ReadFromString(s);
 			realm_name_ = req.realm_name;
@@ -41,7 +42,7 @@ namespace Net {
 			net_client_.Send(reply.WriteAsString());
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_authreply_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_authreply_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_authreply reply;
 			reply.ReadFromString(s);
 			if (reply.reply != PROTO_AUTHREPLY::D2CS_D2GS_AUTHREPLY_SUCCEED) {
@@ -53,20 +54,20 @@ namespace Net {
 			authed_ = true;
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_setconffile_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_setconffile_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_setconffile req;
 			req.ReadFromString(s);
 			LOG(INFO) << "Received conf from d2cs (" << req.conf.length() << " bytes)";
 
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_setinitinfo_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_setinitinfo_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_setinitinfo req;
 			req.ReadFromString(s);
 			LOG(INFO) << "Received initinfo from d2cs: time=" << req.time << ", gs_id=" << req.gs_id << ", ac_version=" << req.ac_version;
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_echoreq_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_echoreq_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_echoreq req;
 			req.ReadFromString(s);
 			t_d2gs_d2cs_echoreply reply;
@@ -74,7 +75,7 @@ namespace Net {
 			net_client_.Send(req.WriteAsString());
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_control_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_control_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_control req;
 			req.ReadFromString(s);
 			LOG(INFO) << "Command from D2CS: " << req.cmd;
@@ -86,7 +87,7 @@ namespace Net {
 			}
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_creategamereq_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_creategamereq_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_creategamereq req;
 			req.ReadFromString(s);
 			
@@ -100,7 +101,7 @@ namespace Net {
 			net_client_.Send(reply.WriteAsString());
 		});
 
-		net_client_.OnPacket(t_d2cs_d2gs_joingamereq_typecode, [this](std::string s) {
+		net_client_.OnPacket(t_d2cs_d2gs_joingamereq_typecode, [this](std::string& s) {
 			t_d2cs_d2gs_joingamereq req;
 			req.ReadFromString(s);
 

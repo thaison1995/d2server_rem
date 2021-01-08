@@ -33,6 +33,12 @@ typedef struct
 } t_d2cs_d2gs_header;
 #pragma pack(pop)
 
+typedef struct {
+	bn_short	size;
+	bn_byte		type;
+	bn_int		seqno;			/* seqno, set by the sender */
+} t_d2dbs_d2gs_header;
+
 #define CONNECT_CLASS_D2GS_TO_D2CS		0x91
 #define CONNECT_CLASS_D2GS_TO_D2DBS		0x88
 

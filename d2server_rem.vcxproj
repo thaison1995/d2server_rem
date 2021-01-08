@@ -155,6 +155,7 @@
     <ClCompile Include="game\Offsets.cpp" />
     <ClCompile Include="net\bnethash.cpp" />
     <ClCompile Include="net\d2cs_client.cpp" />
+    <ClCompile Include="net\d2dbs_client.cpp" />
     <ClCompile Include="net\net_manager.cpp" />
     <ClCompile Include="server\d2server.cpp" />
     <ClCompile Include="server\main.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="game\MPQHelper.h" />
     <ClInclude Include="game\Offsets.h" />
     <ClInclude Include="generated\d2cs_proto.hpp" />
+    <ClInclude Include="generated\d2dbs_proto.hpp" />
     <ClInclude Include="net\bnethash.h" />
     <ClInclude Include="net\bn_types.h" />
     <ClInclude Include="net\connection.h" />

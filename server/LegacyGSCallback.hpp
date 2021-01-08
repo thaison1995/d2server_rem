@@ -16,13 +16,6 @@ extern void __fastcall LeaveGame(LPGAMEDATA lpGameData, WORD wGameId, WORD wChar
 }
 
 
-extern void __fastcall GetDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
-	DWORD dwClientId, LPCSTR lpAccountName)
-{
-	return;
-}
-
-
 extern void __fastcall SaveDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
 	LPCSTR lpAccountName, LPVOID lpSaveData,
 	DWORD dwSize, PLAYERDATA PlayerData)

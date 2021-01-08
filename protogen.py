@@ -11,25 +11,17 @@ def emit_struct(packet_name, packet_code, members):
 def emit_enum(enum_name, enum_type, values):
     global global_enums
     global_enums[enum_name] = (enum_name, enum_type, values)
-'''
 
-void ReadFromString(std::string& s, t_d2cs_d2gs_authreq& out) {
-	std::istringstream iss(s);
-	iss.read((char*)&out.sessionnum, sizeof(bn_int));
-	iss.read((char*)&out.signlen, sizeof(bn_int));
-	std::getline(iss, out.realm_name);
-}
+def gen_code(input, output):
+    global global_structs
+    global global_enums
+    
+    global_enums = dict()
+    global_structs = list()
 
-std::string WriteAsString(t_d2cs_d2gs_authreq& in) {
-	std::ostringstream oss;
-	oss.write((char*)&in.sessionnum, sizeof(bn_int));
-	oss.write((char*)&in.signlen, sizeof(bn_int));
-	oss << in.realm_name;
-	return oss.str();
-}
-'''
-def gen_code():
-    f = open('generated/d2cs_proto.hpp', 'w')
+    parse_proto(input)
+
+    f = open(output, 'w')
     f.write('#ifndef INCLUDED_D2CS_PROTO_HPP\n')
     f.write('#define INCLUDED_D2CS_PROTO_HPP\n\n')
     f.write('#include <string>\n\n')
@@ -51,9 +43,15 @@ def gen_code():
             if member_type in global_enums:
                 member_type = 'PROTO_%s' % member_type
             if member_suffix is not None and member_suffix[0] == 'array':
-                members_c += '  %s %s[%d];\n' % (member_type, member_name, member_suffix[1])
-                read_c  += '    iss.read((char*)&%s[0], sizeof(%s) * %d);\n' % (member_name, member_type, member_suffix[1])
-                write_c += '    oss.write((char*)&%s[0], sizeof(%s) * %d);\n' % (member_name, member_type, member_suffix[1])
+                if member_type == 'charsave':
+                    members_c += '  std::string %s;\n' % (member_name)
+                    read_c  += '    %s.resize(%s);\n' % (member_name, member_suffix[1])
+                    read_c  += '    if (%s > 0) iss.read((char*)&%s.front(), sizeof(char) * %s);\n' % (member_suffix[1], member_name, member_suffix[1])
+                    write_c += '    if (%s > 0) oss.write((char*)&%s.front(), sizeof(char) * %s);\n' % (member_suffix[1], member_name, member_suffix[1])
+                else:
+                    members_c += '  %s %s[%s];\n' % (member_type, member_name, member_suffix[1])
+                    read_c  += '    iss.read((char*)&%s[0], sizeof(%s) * %s);\n' % (member_name, member_type, member_suffix[1])
+                    write_c += '    oss.write((char*)&%s[0], sizeof(%s) * %s);\n' % (member_name, member_type, member_suffix[1])
             else:
                 members_c += '  %s %s;\n' % (member_type, member_name)
                 if member_type == 'string':
@@ -85,45 +83,47 @@ struct %s
 %s};\n\n""" % (packet_name, packet_code, packet_name, members_c, methods_c))
     f.write('#endif\n')
 
-STATE_EXPECT_STRUCT = 1
-STATE_EXPECT_MEMBER = 2
-STATE_EXPECT_ENUM_VALUE = 3
+def parse_proto(input):
+    STATE_EXPECT_STRUCT = 1
+    STATE_EXPECT_MEMBER = 2
+    STATE_EXPECT_ENUM_VALUE = 3
 
-state = STATE_EXPECT_STRUCT
+    state = STATE_EXPECT_STRUCT
 
-with open('d2cs_proto.def', 'r') as f:
-    for line in f:
-        if not line.strip():
-            continue
-        cols = re.split(r'\s+', line.strip())
-        if state == STATE_EXPECT_STRUCT:
-            if cols[0] == 'enum':
-                enum_name, enum_type = cols[1], cols[2]
-                enum_values = list()
-                state = STATE_EXPECT_ENUM_VALUE
-            else:
-                packet_name, packet_code = cols[0], int(cols[1], 0)
-                state = STATE_EXPECT_MEMBER
-                members = list()
-        elif state == STATE_EXPECT_MEMBER:
-            if cols[0] == 'end':
-                emit_struct(packet_name, packet_code, members)
-                state = STATE_EXPECT_STRUCT
-            else:
-                member_type, member_name = cols[0], cols[1]
-                member_suffix = None
-                if member_name.endswith(';'):
-                    member_name = member_name.strip(';')
-                if member_name.find('[') > -1:
-                    member_name, member_suffix = member_name.split('[')
-                    member_suffix = ('array', int(member_suffix.split(']')[0]))
-                members.append((member_type, member_name, member_suffix))
-        elif state == STATE_EXPECT_ENUM_VALUE:
-            if cols[0] == 'end':
-                emit_enum(enum_name, enum_type, enum_values)
-                state = STATE_EXPECT_STRUCT
-            else:
-                enum_value = (cols[0], int(cols[1], 0))
-                enum_values.append(enum_value)
+    with open(input, 'r') as f:
+        for line in f:
+            if not line.strip():
+                continue
+            cols = re.split(r'\s+', line.strip())
+            if state == STATE_EXPECT_STRUCT:
+                if cols[0] == 'enum':
+                    enum_name, enum_type = cols[1], cols[2]
+                    enum_values = list()
+                    state = STATE_EXPECT_ENUM_VALUE
+                else:
+                    packet_name, packet_code = cols[0], int(cols[1], 0)
+                    state = STATE_EXPECT_MEMBER
+                    members = list()
+            elif state == STATE_EXPECT_MEMBER:
+                if cols[0] == 'end':
+                    emit_struct(packet_name, packet_code, members)
+                    state = STATE_EXPECT_STRUCT
+                else:
+                    member_type, member_name = cols[0], cols[1]
+                    member_suffix = None
+                    if member_name.endswith(';'):
+                        member_name = member_name.strip(';')
+                    if member_name.find('[') > -1:
+                        member_name, member_suffix = member_name.split('[')
+                        member_suffix = ('array', member_suffix.split(']')[0])
+                    members.append((member_type, member_name, member_suffix))
+            elif state == STATE_EXPECT_ENUM_VALUE:
+                if cols[0] == 'end':
+                    emit_enum(enum_name, enum_type, enum_values)
+                    state = STATE_EXPECT_STRUCT
+                else:
+                    enum_value = (cols[0], int(cols[1], 0))
+                    enum_values.append(enum_value)
 
-gen_code()
+gen_code('d2cs_proto.def', 'generated/d2cs_proto.hpp')
+gen_code('d2dbs_proto.def', 'generated/d2dbs_proto.hpp')

@@ -72,7 +72,7 @@ namespace Net {
 	template<typename T>
 	class D2XSClient {
 	public:
-		using on_packet_handler = std::function<void(std::string)>;
+		using on_packet_handler = std::function<void(std::string&)>;
 		using on_connect_handler = std::function<void()>;
 		using on_error_handler = std::function<void(std::error_code)>;
 		using d2xs_request = std::string;
@@ -185,11 +185,12 @@ namespace Net {
 				{
 					// handle pkt
 					bn_short packet_type = response_.packet_type();
-					LOG(INFO) << "[" << client_name_ << "] Got packet type " << packet_type;
+					std::string packet = response_.packet();
+					LOG(INFO) << "[" << client_name_ << "] Got packet type " << packet_type << " (size: " << packet.length() << ")";
 
 					if (on_packet_handlers_[packet_type]) {
 						// make a copy, otherwise buffer can be tempered by one of those following responses
-						on_packet_handlers_[packet_type](response_.packet());
+						on_packet_handlers_[packet_type](packet);
 					}
 					else {
 						LOG(WARNING) << "[" << client_name_ << "] No handler for packet type " << packet_type;

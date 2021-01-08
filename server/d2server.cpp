@@ -187,6 +187,26 @@ namespace Server {
 		return 0;
 	}
 
+	void D2Server::CallbackGetDatabaseCharacter(std::string acctname, std::string charname, int client_id) {
+		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname,
+			[acctname, charname, client_id](bool allow_ladder, int char_create_time, std::string charsave) {
+			PLAYERINFO pi;
+			strcpy_s((char*)&pi.AcctName, 16, acctname.c_str());
+			strcpy_s((char*)&pi.CharName, 16, charname.c_str());
+			if (!D2Funcs.D2GAME_SendDatabaseCharacter(client_id, (void*)charsave.c_str(),
+				charsave.length(), charsave.length(), false, 0, &pi, 0x1)) {
+				LOG(ERROR) << "Failed to call D2GAME_SendDatabaseCharacter";
+			}
+			else {
+				LOG(INFO) << "Successfully loaded character " << charname << " (create_time=" << char_create_time 
+					<< ",ladder=" << allow_ladder << ")";
+			}
+			}, [client_id](Net::D2DBSClient::GetDataFailureReason reason) {
+				LOG(ERROR) << "Can't get charsave for client " << client_id;
+			}
+		);
+	}
+
 	void D2Server::ServerLoop() {
 		LOG(WARNING) << "Waiting for auth from D2CS";
 		while (!net_manager_->d2cs_client().authed()) {
@@ -223,7 +243,10 @@ namespace Server {
 			r.charname = req.charname;
 			r.acctname = req.acctname;
 			r.client_ipaddr = req.client_ipaddr;
-			pending_join_requests_[req.token] = r;
+			{
+				std::lock_guard<std::mutex> guard(mutex_);
+				pending_join_requests_[req.token] = r;
+			}
 			LOG(INFO) << "Added request for " << req.charname << "(*" << req.acctname << ") to join game "
 				<< req.gameid << " (client address is " << req.client_ipaddr << ")";
 			return true;
@@ -247,11 +270,22 @@ namespace Server {
 		D2Funcs.D2GAME_10024(1, 0);
 	}
 
+	static D2Server* g_server;
+
+	extern void __fastcall GetDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
+		DWORD dwClientId, LPCSTR lpAccountName)
+	{
+		g_server->CallbackGetDatabaseCharacter(lpAccountName, lpCharName, dwClientId);
+	}
+
+
 	#include "LegacyGSCallback.hpp"
 
 	D2Server::D2Server(bool legacy, Net::NetManagerRef net_manager)
 		:legacy_(legacy), net_manager_(net_manager)
 	{
+		g_server = this;
+
 		SetupCallbackTable(callback_table_);
 
 		gs_info_.szVersion = "GSRem";
@@ -284,6 +318,7 @@ namespace Server {
 			gsStart = lpD2GSInterface->D2GSStart;
 
 			InitD2Env();
+
 			// avoid setting 6FFA6E74 to 1
 			Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
 			Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");

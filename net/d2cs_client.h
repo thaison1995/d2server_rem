@@ -4,8 +4,6 @@
 #include "generated/d2cs_proto.hpp"
 #include "d2xs_client.hpp"
 
-#include <future>
-
 namespace Net {
 	class D2CSClient {
 	public:
