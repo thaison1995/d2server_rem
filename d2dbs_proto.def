@@ -7,18 +7,18 @@ t_d2gs_d2dbs_save_charsave_request		0x30
   bn_short      datalen;
   bn_short		ist;
   bn_short		changedist;
-  std::string   acctname;
-  std::string   charname;
-  std::string   ipaddr;
-  std::string   item_record;
+  string   acctname;
+  string   charname;
+  string   ipaddr;
+  string   item_record;
   charsave   data[datalen];
 end
 
 t_d2gs_d2dbs_save_charinfo_request		0x40
   t_d2dbs_d2gs_header  h; 
   bn_short      datalen;
-  std::string   acctname;
-  std::string   charname;
+  string   acctname;
+  string   charname;
   charsave   data[datalen];
 end
 
@@ -36,15 +36,15 @@ t_d2dbs_d2gs_save_data_reply			0x30
 	t_d2dbs_d2gs_header	h;
 	SAVE_RESULT				result;
 	DATATYPE			datatype;
-    std::string   charname;
+    string   charname;
 end
 
 
 t_d2gs_d2dbs_get_data_request		0x31
   t_d2dbs_d2gs_header  h; 
   DATATYPE      datatype;
-  std::string   acctname;
-  std::string   charname;
+  string   acctname;
+  string   charname;
 end
 
 
@@ -61,7 +61,7 @@ t_d2dbs_d2gs_get_data_reply		0x31
   bn_byte    allowladder;
   DATATYPE      datatype;
   bn_short      datalen; 
-  std::string   charname;
+  string   charname;
   charsave   data[datalen];
 end
 
@@ -73,14 +73,14 @@ t_d2gs_d2dbs_update_ladder		0x32
  bn_int  charexphigh; 
  bn_byte charclass; 
  bn_short charstatus; 
- std::string   charname;
+ string   charname;
 end
 
 
 t_d2gs_d2dbs_char_lock		0x33
   t_d2dbs_d2gs_header h; 
   bn_byte  lockstatus; 
-  std::string   charname;
+  string   charname;
 end
 
 
@@ -96,5 +96,5 @@ end
 t_d2gs_d2dbs_closesignal		0x37
 	t_d2dbs_d2gs_header	h;
 	bn_byte ifclose;
-    std::string   gamename;
+    string   gamename;
 end

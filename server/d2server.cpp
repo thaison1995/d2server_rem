@@ -88,18 +88,18 @@ namespace Server {
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x1B98A), Fog_D2MemoryPool_pManagers, 4, "");
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x10F78), (DWORD)0, 4, "");
 
-		// avoid setting 6FFA6E74 to 1
-		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
-		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");
+// avoid setting 6FFA6E74 to 1
+Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
+Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");
 
-		// 1.13 CompareFileTime workaround
-		Patch(PATCH_CUSTOM, GetDllOffset("D2Game.dll", 0xEBB55), (WORD)0x9090, 2, "");
+// 1.13 CompareFileTime workaround
+Patch(PATCH_CUSTOM, GetDllOffset("D2Game.dll", 0xEBB55), (WORD)0x9090, 2, "");
 
-		dword_func00 = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
+dword_func00 = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
 
-		LOG(INFO) << "All D2 patches applied successfully";
+LOG(INFO) << "All D2 patches applied successfully";
 	}
-	
+
 	int D2Server::ServerInit() {
 		// D2GSStart
 		//   run MyPatchInit 1.asm
@@ -188,11 +188,21 @@ namespace Server {
 	}
 
 	void D2Server::CallbackGetDatabaseCharacter(std::string acctname, std::string charname, int client_id) {
+		if (players_.find(charname) == players_.end()) {
+			LOG(ERROR) << "Char " << charname << " does not exist in players_";
+			return;
+		}
+
+		GamePlayer &player = players_[charname];
+		player.client_id = client_id;
+
 		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname,
-			[acctname, charname, client_id](bool allow_ladder, int char_create_time, std::string charsave) {
+			[acctname, charname, client_id, &player](bool allow_ladder, int char_create_time, std::string charsave) {
 			PLAYERINFO pi;
-			strcpy_s((char*)&pi.AcctName, 16, acctname.c_str());
-			strcpy_s((char*)&pi.CharName, 16, charname.c_str());
+			pi.PlayerMark = 0;
+			pi.dwReserved = 0;
+			strcpy_s((char*)&pi.AcctName, 16, player.acctname.c_str());
+			strcpy_s((char*)&pi.CharName, 16, player.charname.c_str());
 			if (!D2Funcs.D2GAME_SendDatabaseCharacter(client_id, (void*)charsave.c_str(),
 				charsave.length(), charsave.length(), false, 0, &pi, 0x1)) {
 				LOG(ERROR) << "Failed to call D2GAME_SendDatabaseCharacter";
@@ -205,6 +215,20 @@ namespace Server {
 				LOG(ERROR) << "Can't get charsave for client " << client_id;
 			}
 		);
+	}
+
+	GamePlayer D2Server::CallbackFindPlayerToken(std::string charname, join_request_token token, int game_id)
+	{
+		std::lock_guard<std::mutex> guard(mutex_);
+		if (pending_join_requests_.find(token) == pending_join_requests_.end()) {
+			return {};
+		}
+		auto& req = pending_join_requests_[token];
+		if (req.charname != charname || req.game_id != game_id) {
+			return {};
+		}
+		pending_join_requests_.erase(token);
+		return players_[charname];
 	}
 
 	void D2Server::ServerLoop() {
@@ -246,6 +270,7 @@ namespace Server {
 			{
 				std::lock_guard<std::mutex> guard(mutex_);
 				pending_join_requests_[req.token] = r;
+				players_[req.charname] = {req.charname, req.acctname, r.game_id, -1};
 			}
 			LOG(INFO) << "Added request for " << req.charname << "(*" << req.acctname << ") to join game "
 				<< req.gameid << " (client address is " << req.client_ipaddr << ")";
@@ -278,6 +303,17 @@ namespace Server {
 		g_server->CallbackGetDatabaseCharacter(lpAccountName, lpCharName, dwClientId);
 	}
 
+	extern BOOL __fastcall FindPlayerToken(LPCSTR lpCharName, DWORD dwToken, WORD wGameId,
+		LPSTR lpAccountName, LPPLAYERDATA lpPlayerData, int a1, int a2, int a3, int a4)
+	{
+		GamePlayer player = g_server->CallbackFindPlayerToken(lpCharName, dwToken, wGameId);
+		if (player.game_id == wGameId) {
+			strcpy_s(lpAccountName, 16, player.acctname.c_str());
+			*lpPlayerData = (PLAYERDATA)0x01;
+			return true;
+		}
+		return false;
+	}
 
 	#include "LegacyGSCallback.hpp"
 

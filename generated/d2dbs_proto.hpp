@@ -52,10 +52,10 @@ struct t_d2gs_d2dbs_save_charsave_request
   bn_short datalen;
   bn_short ist;
   bn_short changedist;
-  std::string acctname;
-  std::string charname;
-  std::string ipaddr;
-  std::string item_record;
+  string acctname;
+  string charname;
+  string ipaddr;
+  string item_record;
   std::string data;
 
   void ReadFromString(std::string& s) {
@@ -64,10 +64,10 @@ struct t_d2gs_d2dbs_save_charsave_request
     iss.read((char*)&datalen, sizeof(bn_short));
     iss.read((char*)&ist, sizeof(bn_short));
     iss.read((char*)&changedist, sizeof(bn_short));
-    iss.read((char*)&acctname, sizeof(std::string));
-    iss.read((char*)&charname, sizeof(std::string));
-    iss.read((char*)&ipaddr, sizeof(std::string));
-    iss.read((char*)&item_record, sizeof(std::string));
+    std::getline(iss, acctname, '\0');
+    std::getline(iss, charname, '\0');
+    std::getline(iss, ipaddr, '\0');
+    std::getline(iss, item_record, '\0');
     data.resize(datalen);
     if (datalen > 0) iss.read((char*)&data.front(), sizeof(char) * datalen);
   }
@@ -78,10 +78,14 @@ struct t_d2gs_d2dbs_save_charsave_request
     oss.write((char*)&datalen, sizeof(bn_short));
     oss.write((char*)&ist, sizeof(bn_short));
     oss.write((char*)&changedist, sizeof(bn_short));
-    oss.write((char*)&acctname, sizeof(std::string));
-    oss.write((char*)&charname, sizeof(std::string));
-    oss.write((char*)&ipaddr, sizeof(std::string));
-    oss.write((char*)&item_record, sizeof(std::string));
+    oss << acctname;
+    oss.put((char)0);
+    oss << charname;
+    oss.put((char)0);
+    oss << ipaddr;
+    oss.put((char)0);
+    oss << item_record;
+    oss.put((char)0);
     if (datalen > 0) oss.write((char*)&data.front(), sizeof(char) * datalen);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
@@ -95,16 +99,16 @@ struct t_d2gs_d2dbs_save_charinfo_request
 {
   t_d2dbs_d2gs_header h;
   bn_short datalen;
-  std::string acctname;
-  std::string charname;
+  string acctname;
+  string charname;
   std::string data;
 
   void ReadFromString(std::string& s) {
     std::istringstream iss(s);
     iss.read((char*)&h, sizeof(t_d2dbs_d2gs_header));
     iss.read((char*)&datalen, sizeof(bn_short));
-    iss.read((char*)&acctname, sizeof(std::string));
-    iss.read((char*)&charname, sizeof(std::string));
+    std::getline(iss, acctname, '\0');
+    std::getline(iss, charname, '\0');
     data.resize(datalen);
     if (datalen > 0) iss.read((char*)&data.front(), sizeof(char) * datalen);
   }
@@ -113,8 +117,10 @@ struct t_d2gs_d2dbs_save_charinfo_request
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2dbs_d2gs_header));
     oss.write((char*)&datalen, sizeof(bn_short));
-    oss.write((char*)&acctname, sizeof(std::string));
-    oss.write((char*)&charname, sizeof(std::string));
+    oss << acctname;
+    oss.put((char)0);
+    oss << charname;
+    oss.put((char)0);
     if (datalen > 0) oss.write((char*)&data.front(), sizeof(char) * datalen);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
@@ -129,14 +135,14 @@ struct t_d2dbs_d2gs_save_data_reply
   t_d2dbs_d2gs_header h;
   PROTO_SAVE_RESULT result;
   PROTO_DATATYPE datatype;
-  std::string charname;
+  string charname;
 
   void ReadFromString(std::string& s) {
     std::istringstream iss(s);
     iss.read((char*)&h, sizeof(t_d2dbs_d2gs_header));
     iss.read((char*)&result, sizeof(PROTO_SAVE_RESULT));
     iss.read((char*)&datatype, sizeof(PROTO_DATATYPE));
-    iss.read((char*)&charname, sizeof(std::string));
+    std::getline(iss, charname, '\0');
   }
   std::string WriteAsString() {
     h.type = 48;
@@ -144,7 +150,8 @@ struct t_d2dbs_d2gs_save_data_reply
     oss.write((char*)&h, sizeof(t_d2dbs_d2gs_header));
     oss.write((char*)&result, sizeof(PROTO_SAVE_RESULT));
     oss.write((char*)&datatype, sizeof(PROTO_DATATYPE));
-    oss.write((char*)&charname, sizeof(std::string));
+    oss << charname;
+    oss.put((char)0);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
     oss.write((char*)&h.size, sizeof(bn_int));
@@ -157,23 +164,25 @@ struct t_d2gs_d2dbs_get_data_request
 {
   t_d2dbs_d2gs_header h;
   PROTO_DATATYPE datatype;
-  std::string acctname;
-  std::string charname;
+  string acctname;
+  string charname;
 
   void ReadFromString(std::string& s) {
     std::istringstream iss(s);
     iss.read((char*)&h, sizeof(t_d2dbs_d2gs_header));
     iss.read((char*)&datatype, sizeof(PROTO_DATATYPE));
-    iss.read((char*)&acctname, sizeof(std::string));
-    iss.read((char*)&charname, sizeof(std::string));
+    std::getline(iss, acctname, '\0');
+    std::getline(iss, charname, '\0');
   }
   std::string WriteAsString() {
     h.type = 49;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2dbs_d2gs_header));
     oss.write((char*)&datatype, sizeof(PROTO_DATATYPE));
-    oss.write((char*)&acctname, sizeof(std::string));
-    oss.write((char*)&charname, sizeof(std::string));
+    oss << acctname;
+    oss.put((char)0);
+    oss << charname;
+    oss.put((char)0);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
     oss.write((char*)&h.size, sizeof(bn_int));
@@ -190,7 +199,7 @@ struct t_d2dbs_d2gs_get_data_reply
   bn_byte allowladder;
   PROTO_DATATYPE datatype;
   bn_short datalen;
-  std::string charname;
+  string charname;
   std::string data;
 
   void ReadFromString(std::string& s) {
@@ -201,7 +210,7 @@ struct t_d2dbs_d2gs_get_data_reply
     iss.read((char*)&allowladder, sizeof(bn_byte));
     iss.read((char*)&datatype, sizeof(PROTO_DATATYPE));
     iss.read((char*)&datalen, sizeof(bn_short));
-    iss.read((char*)&charname, sizeof(std::string));
+    std::getline(iss, charname, '\0');
     data.resize(datalen);
     if (datalen > 0) iss.read((char*)&data.front(), sizeof(char) * datalen);
   }
@@ -214,7 +223,8 @@ struct t_d2dbs_d2gs_get_data_reply
     oss.write((char*)&allowladder, sizeof(bn_byte));
     oss.write((char*)&datatype, sizeof(PROTO_DATATYPE));
     oss.write((char*)&datalen, sizeof(bn_short));
-    oss.write((char*)&charname, sizeof(std::string));
+    oss << charname;
+    oss.put((char)0);
     if (datalen > 0) oss.write((char*)&data.front(), sizeof(char) * datalen);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
@@ -232,7 +242,7 @@ struct t_d2gs_d2dbs_update_ladder
   bn_int charexphigh;
   bn_byte charclass;
   bn_short charstatus;
-  std::string charname;
+  string charname;
 
   void ReadFromString(std::string& s) {
     std::istringstream iss(s);
@@ -242,7 +252,7 @@ struct t_d2gs_d2dbs_update_ladder
     iss.read((char*)&charexphigh, sizeof(bn_int));
     iss.read((char*)&charclass, sizeof(bn_byte));
     iss.read((char*)&charstatus, sizeof(bn_short));
-    iss.read((char*)&charname, sizeof(std::string));
+    std::getline(iss, charname, '\0');
   }
   std::string WriteAsString() {
     h.type = 50;
@@ -253,7 +263,8 @@ struct t_d2gs_d2dbs_update_ladder
     oss.write((char*)&charexphigh, sizeof(bn_int));
     oss.write((char*)&charclass, sizeof(bn_byte));
     oss.write((char*)&charstatus, sizeof(bn_short));
-    oss.write((char*)&charname, sizeof(std::string));
+    oss << charname;
+    oss.put((char)0);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
     oss.write((char*)&h.size, sizeof(bn_int));
@@ -266,20 +277,21 @@ struct t_d2gs_d2dbs_char_lock
 {
   t_d2dbs_d2gs_header h;
   bn_byte lockstatus;
-  std::string charname;
+  string charname;
 
   void ReadFromString(std::string& s) {
     std::istringstream iss(s);
     iss.read((char*)&h, sizeof(t_d2dbs_d2gs_header));
     iss.read((char*)&lockstatus, sizeof(bn_byte));
-    iss.read((char*)&charname, sizeof(std::string));
+    std::getline(iss, charname, '\0');
   }
   std::string WriteAsString() {
     h.type = 51;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2dbs_d2gs_header));
     oss.write((char*)&lockstatus, sizeof(bn_byte));
-    oss.write((char*)&charname, sizeof(std::string));
+    oss << charname;
+    oss.put((char)0);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
     oss.write((char*)&h.size, sizeof(bn_int));
@@ -332,20 +344,21 @@ struct t_d2gs_d2dbs_closesignal
 {
   t_d2dbs_d2gs_header h;
   bn_byte ifclose;
-  std::string gamename;
+  string gamename;
 
   void ReadFromString(std::string& s) {
     std::istringstream iss(s);
     iss.read((char*)&h, sizeof(t_d2dbs_d2gs_header));
     iss.read((char*)&ifclose, sizeof(bn_byte));
-    iss.read((char*)&gamename, sizeof(std::string));
+    std::getline(iss, gamename, '\0');
   }
   std::string WriteAsString() {
     h.type = 55;
     std::ostringstream oss;
     oss.write((char*)&h, sizeof(t_d2dbs_d2gs_header));
     oss.write((char*)&ifclose, sizeof(bn_byte));
-    oss.write((char*)&gamename, sizeof(std::string));
+    oss << gamename;
+    oss.put((char)0);
     h.size = (bn_short)oss.tellp();
     oss.seekp(0);
     oss.write((char*)&h.size, sizeof(bn_int));

@@ -10,7 +10,7 @@ extern void __fastcall LeaveGame(LPGAMEDATA lpGameData, WORD wGameId, WORD wChar
 	WORD wCharStatus, LPCSTR lpCharName, LPCSTR lpCharPortrait,
 	BOOL bUnlock, DWORD dwZero1, DWORD dwZero2,
 	LPCSTR lpAccountName, PLAYERDATA PlayerData,
-	PLAYERMARK PlayerMark)
+	PLAYERMARK PlayerMark, DWORD a1, DWORD a2, DWORD a3, DWORD a4, int a5)
 {
 	return;
 }
@@ -30,14 +30,6 @@ extern void __fastcall EnterGame(WORD wGameId, LPCSTR lpCharName, WORD wCharClas
 {
 	return;
 }
-
-
-extern BOOL __fastcall FindPlayerToken(LPCSTR lpCharName, DWORD dwToken, WORD wGameId,
-	LPSTR lpAccountName, LPPLAYERDATA lpPlayerData, int a1, int a2, int a3, int a4)
-{
-	return true;
-}
-
 
 extern void __fastcall UnlockDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
 	LPCSTR lpAccountName)

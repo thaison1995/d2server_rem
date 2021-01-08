@@ -39,17 +39,15 @@ namespace Net {
 
 		int seqno = ntohl(header.h.seqno);
 
-		PendingCall call;
 		{
 			std::lock_guard<std::mutex> guard(mutex_);
 			if (pending_calls_.find(seqno) == pending_calls_.end()) {
 				LOG(WARNING) << "Got reply for packet seqno " << seqno << " but no pending call was found";
 				return;
 			}
-			call = pending_calls_[seqno];
-			pending_calls_.erase(seqno);
+			pending_calls_[seqno](s);
+			//pending_calls_.erase(seqno);
 		}
-		call(s);
 	}
 
 	void D2DBSClient::GetCharsaveDataAsync(std::string acctname, std::string charname,
@@ -69,7 +67,7 @@ namespace Net {
 				reply.ReadFromString(s);
 				if (reply.result == PROTO_GET_DATA_RESULT::D2DBS_GET_DATA_SUCCESS) {
 					success_handler(reply.allowladder, reply.charcreatetime, reply.data);
-					LOG(INFO) << "Successfully got charsave for " << charname << "(*" << acctname << ")";
+					LOG(INFO) << "Successfully retrieved charsave for " << charname << "(*" << acctname << ")";
 				}
 				else if (reply.result == PROTO_GET_DATA_RESULT::D2DBS_GET_DATA_CHARLOCKED) {
 					failure_handler(GetDataFailureReason::CharLocked);

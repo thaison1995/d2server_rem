@@ -17,6 +17,13 @@ namespace Server {
 		std::string client_ipaddr;
 	};
 
+	struct GamePlayer {
+		std::string charname;
+		std::string acctname;
+		int game_id;
+		int client_id;
+	};
+
 	class D2Server {
 	public:
 		D2Server(const D2Server&) = delete;
@@ -24,6 +31,7 @@ namespace Server {
 		void Run();
 
 		void CallbackGetDatabaseCharacter(std::string acctname, std::string charname, int client_id);
+		GamePlayer CallbackFindPlayerToken(std::string charname, join_request_token token, int game_id);
 
 	private:
 		bool legacy_;
@@ -33,12 +41,6 @@ namespace Server {
 		Net::NetManagerRef net_manager_;
 		std::unordered_map<join_request_token, JoinRequest> pending_join_requests_;
 		
-		struct GamePlayer {
-			std::string charname;
-			std::string acctname;
-			int game_id;
-			int client_id;
-		};
 		std::unordered_map<std::string, GamePlayer> players_;
 		std::mutex mutex_;
 
