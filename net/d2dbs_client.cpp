@@ -30,6 +30,13 @@ namespace Net {
 		auto reply_packet_handler = std::bind(&D2DBSClient::handle_reply_packet, this, _1);
 
 		net_client_.OnPacket(t_d2dbs_d2gs_get_data_reply_typecode, reply_packet_handler);
+		net_client_.OnPacket(t_d2dbs_d2gs_save_data_reply_typecode, [this](std::string& s) {
+			t_d2dbs_d2gs_save_data_reply reply;
+			reply.ReadFromString(s);
+			LOG(INFO) << "Save " << (reply.datatype == PROTO_DATATYPE::D2GS_DATA_CHARSAVE ? "charsave" : "charinfo") 
+				<< " for " << reply.charname << " result: " 
+				<< (reply.result == PROTO_SAVE_RESULT::D2DBS_SAVE_DATA_SUCCESS ? "SUCCESS" : "FAILURE");
+		});
 	}
 
 	void D2DBSClient::handle_reply_packet(std::string& s)
@@ -37,17 +44,18 @@ namespace Net {
 		t_d2gs_d2dbs_generic header;
 		header.ReadFromString(s);
 
-		int seqno = ntohl(header.h.seqno);
-
+		int seqno = header.h.seqno;
+		PendingCall call;
 		{
 			std::lock_guard<std::mutex> guard(mutex_);
 			if (pending_calls_.find(seqno) == pending_calls_.end()) {
 				LOG(WARNING) << "Got reply for packet seqno " << seqno << " but no pending call was found";
 				return;
 			}
-			pending_calls_[seqno](s);
-			//pending_calls_.erase(seqno);
+			call = pending_calls_[seqno];
+			pending_calls_.erase(seqno);
 		}
+		call(s);
 	}
 
 	void D2DBSClient::GetCharsaveDataAsync(std::string acctname, std::string charname,
@@ -55,7 +63,7 @@ namespace Net {
 	{
 		int seqno = ++seqno_;
 		t_d2gs_d2dbs_get_data_request req;
-		req.h.seqno = htonl(seqno);
+		req.h.seqno = seqno;
 		req.acctname = acctname;
 		req.charname = charname;
 		req.datatype = PROTO_DATATYPE::D2GS_DATA_CHARSAVE;
@@ -81,6 +89,75 @@ namespace Net {
 		}
 		net_client_.Send(req.WriteAsString());
 		LOG(INFO) << "Request sent to get charsave for " << charname << "(*" << acctname << ")";
+	}
+
+	void D2DBSClient::SaveCharsaveAsync(std::string acctname, std::string charname, std::string ipaddr, std::string& charsave)
+	{
+		int seqno = ++seqno_;
+		t_d2gs_d2dbs_save_charsave_request req;
+		req.h.seqno = seqno;
+		req.datalen = charsave.length();
+		req.ist = 0;
+		req.changedist = 0;
+		req.acctname = acctname;
+		req.charname = charname;
+		req.gamename = "";
+		req.ipaddr = ipaddr;
+		req.item_record = "";
+		req.data = charsave;
+		net_client_.Send(req.WriteAsString());
+		LOG(INFO) << "Request sent to save charsave for " << charname << "(*" << acctname << "), size is " << charsave.length();
+	}
+
+	void D2DBSClient::SaveCharinfoAsync(std::string acctname, std::string charname, std::string& charinfo)
+	{
+		int seqno = ++seqno_;
+		t_d2gs_d2dbs_save_charinfo_request req;
+		req.h.seqno = seqno;
+		req.datalen = charinfo.length();
+		req.acctname = acctname;
+		req.charname = charname;
+		req.data = charinfo;
+		net_client_.Send(req.WriteAsString());
+		LOG(INFO) << "Request sent to save charinfo for " << charname << "(*" << acctname << "), size is " << charinfo.length();
+	}
+
+	void D2DBSClient::CharLockAsync(std::string acctname, std::string charname, bool lock)
+	{
+		int seqno = ++seqno_;
+		t_d2gs_d2dbs_char_lock req;
+		req.h.seqno = seqno;
+		req.lockstatus = lock ? 1 : 0;
+		req.charname = charname;
+		net_client_.Send(req.WriteAsString());
+		LOG(INFO) << "Request sent to set charlock=" << lock << " for " << charname << "(*" << acctname << ")";
+	}
+
+	void D2DBSClient::UpdateLadderAsync(std::string acctname, std::string charname, int char_class, int char_level, 
+		int exp_low, int exp_high, int char_status)
+	{
+		int seqno = ++seqno_;
+		t_d2gs_d2dbs_update_ladder req;
+		req.h.seqno = seqno;
+		req.charlevel = char_level;
+		req.charexplow = exp_low;
+		req.charexphigh = exp_high;
+		req.charclass = char_class;
+		req.charstatus = char_status;
+		req.charname = charname;
+		net_client_.Send(req.WriteAsString());
+		LOG(INFO) << "Sent ladder infromation for " << charname << "(*" << acctname << ")";
+	}
+
+	void D2DBSClient::GameSignalAsync(std::string gamename, bool close)
+	{
+		int seqno = ++seqno_;
+		t_d2gs_d2dbs_closesignal req;
+		req.h.seqno = seqno;
+		req.gamename = gamename;
+		req.ifclose = close ? 1 : 0;
+		net_client_.Send(req.WriteAsString());
+		LOG(INFO) << "Sent d2dbs signal for game " << gamename;
 	}
 
 }

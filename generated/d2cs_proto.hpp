@@ -2,8 +2,8 @@
 #define INCLUDED_D2CS_PROTO_HPP
 
 #include <string>
-
 #include <sstream>
+#include <WinSock2.h>
 
 #include "net/bn_types.h"
 

@@ -124,7 +124,8 @@ namespace Net {
 		net_client_.Send(req.WriteAsString());
 	}
 
-	void D2CSClient::UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, int char_class, int addr) {
+	void D2CSClient::UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, int char_class, 
+		int addr, std::string charname) {
 		t_d2gs_d2cs_updategameinfo req;
 		req.h.seqno = seqno_++;
 		req.flag = flag;
@@ -132,6 +133,7 @@ namespace Net {
 		req.charlevel = char_level;
 		req.charclass = char_class;
 		req.addr = addr;
+		req.charname = charname;
 		net_client_.Send(req.WriteAsString());
 	}
 

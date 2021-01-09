@@ -153,8 +153,8 @@
     <ClCompile Include="game\Misc.cpp" />
     <ClCompile Include="game\MPQHelper.cpp" />
     <ClCompile Include="game\Offsets.cpp" />
-    <ClCompile Include="net\bnethash.cpp" />
     <ClCompile Include="net\d2cs_client.cpp" />
+    <ClCompile Include="net\d2cs_d2gs_character.cpp" />
     <ClCompile Include="net\d2dbs_client.cpp" />
     <ClCompile Include="net\net_manager.cpp" />
     <ClCompile Include="server\d2server.cpp" />
@@ -167,15 +167,15 @@
     <ClInclude Include="game\D2PacketDef.h" />
     <ClInclude Include="game\D2Ptrs.h" />
     <ClInclude Include="game\D2Structs.h" />
+    <ClInclude Include="game\HelperFunction.hpp" />
     <ClInclude Include="game\Misc.h" />
     <ClInclude Include="game\MPQHelper.h" />
     <ClInclude Include="game\Offsets.h" />
     <ClInclude Include="generated\d2cs_proto.hpp" />
     <ClInclude Include="generated\d2dbs_proto.hpp" />
-    <ClInclude Include="net\bnethash.h" />
     <ClInclude Include="net\bn_types.h" />
-    <ClInclude Include="net\connection.h" />
     <ClInclude Include="net\d2cs_client.h" />
+    <ClInclude Include="net\d2cs_d2gs_character.h" />
     <ClInclude Include="net\d2dbs_client.h" />
     <ClInclude Include="net\d2xs_client.hpp" />
     <ClInclude Include="net\net_manager.h" />

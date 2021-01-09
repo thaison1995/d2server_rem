@@ -1,8 +1,9 @@
 #ifndef INCLUDED_D2CS_CLIENT_H
 #define INCLUDED_D2CS_CLIENT_H
 
-#include "generated/d2cs_proto.hpp"
 #include "d2xs_client.hpp"
+
+#include "generated/d2cs_proto.hpp"
 
 namespace Net {
 	class D2CSClient {
@@ -17,9 +18,13 @@ namespace Net {
 		bool authed() const {
 			return authed_;
 		}
+		std::string realm_name() const {
+			return realm_name_;
+		}
 
 		void SetGSInfoAsync(int max_game, int game_flag);
-		void UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, int char_class, int addr);
+		void UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, 
+			int char_class, int addr, std::string charname);
 		void CloseGameAsync(int game_id);
 
 		using create_game_handler = std::function<bool(t_d2cs_d2gs_creategamereq& req, int& game_id)>;

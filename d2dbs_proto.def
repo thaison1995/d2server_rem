@@ -9,6 +9,7 @@ t_d2gs_d2dbs_save_charsave_request		0x30
   bn_short		changedist;
   string   acctname;
   string   charname;
+  string   gamename;
   string   ipaddr;
   string   item_record;
   charsave   data[datalen];

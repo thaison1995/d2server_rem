@@ -1,6 +1,8 @@
 #define GOOGLE_GLOG_DLL_DECL
 #include <glog/logging.h>
 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include "d2server.h"
 
 #include "game/Offsets.h"
@@ -9,6 +11,7 @@
 #include "game/D2Ptrs.h"
 #define __DEFINE_EXPTRS
 #include "game/D2Ptrs.h"
+#undef __DEFINE_EXPTRS
 
 #include "game/Misc.h"
 
@@ -20,6 +23,11 @@
 #pragma comment(lib, "server/d2server.lib")
 
 #include "game/MPQHelper.h"
+
+#include <utility>
+
+#include "game/HelperFunction.hpp"
+#include "net/d2cs_d2gs_character.h"
 
 namespace Server {
 	int __stdcall ErrorHandler(int addr, int a2, int a3, char* fmt...) {
@@ -53,6 +61,12 @@ namespace Server {
 	}
 
 	static void* dword_func00;
+
+	void D2Server::OnNextFrame(OnFrameEvent f)
+	{
+		std::lock_guard<std::mutex> guard(mutex_);
+		on_frame_events_.push_back(f);
+	}
 
 	void D2Server::PatchD2() {
 		LOG(INFO) << "Patching FOG Exception Handler";
@@ -88,16 +102,19 @@ namespace Server {
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x1B98A), Fog_D2MemoryPool_pManagers, 4, "");
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x10F78), (DWORD)0, 4, "");
 
-// avoid setting 6FFA6E74 to 1
-Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
-Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");
+		// avoid setting 6FFA6E74 to 1
+		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
+		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");
 
-// 1.13 CompareFileTime workaround
-Patch(PATCH_CUSTOM, GetDllOffset("D2Game.dll", 0xEBB55), (WORD)0x9090, 2, "");
+		// 1.13 CompareFileTime workaround
+		Patch(PATCH_CUSTOM, GetDllOffset("D2Game.dll", 0xEBB2A), (WORD)0xEB, 1, "");
 
-dword_func00 = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
+		// from patch table 
+		Patch(PATCH_CUSTOM, GetDllOffset("D2Game.dll", 0x52743), (WORD)0xEB09, 2, "");
 
-LOG(INFO) << "All D2 patches applied successfully";
+		dword_func00 = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
+
+		LOG(INFO) << "All D2 patches applied successfully";
 	}
 
 	int D2Server::ServerInit() {
@@ -188,28 +205,28 @@ LOG(INFO) << "All D2 patches applied successfully";
 	}
 
 	void D2Server::CallbackGetDatabaseCharacter(std::string acctname, std::string charname, int client_id) {
-		if (players_.find(charname) == players_.end()) {
+		PlayerRef curr_player = player(charname);
+		if (curr_player == nullptr) {
 			LOG(ERROR) << "Char " << charname << " does not exist in players_";
 			return;
 		}
-
-		GamePlayer &player = players_[charname];
-		player.client_id = client_id;
+		curr_player->client_id = client_id;
 
 		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname,
-			[acctname, charname, client_id, &player](bool allow_ladder, int char_create_time, std::string charsave) {
+			[acctname, charname, client_id, &curr_player](bool allow_ladder, int char_create_time, std::string charsave) {
+			curr_player->locked = true;
 			PLAYERINFO pi;
 			pi.PlayerMark = 0;
 			pi.dwReserved = 0;
-			strcpy_s((char*)&pi.AcctName, 16, player.acctname.c_str());
-			strcpy_s((char*)&pi.CharName, 16, player.charname.c_str());
+			strcpy_s((char*)&pi.AcctName, 16, curr_player->acctname.c_str());
+			strcpy_s((char*)&pi.CharName, 16, curr_player->charname.c_str());
 			if (!D2Funcs.D2GAME_SendDatabaseCharacter(client_id, (void*)charsave.c_str(),
 				charsave.length(), charsave.length(), false, 0, &pi, 0x1)) {
 				LOG(ERROR) << "Failed to call D2GAME_SendDatabaseCharacter";
 			}
 			else {
-				LOG(INFO) << "Successfully loaded character " << charname << " (create_time=" << char_create_time 
-					<< ",ladder=" << allow_ladder << ")";
+				LOG(INFO) << "Successfully loaded character " << charname << " (create_time=" << char_create_time
+					<< ",ladder=" << allow_ladder << ",size=" << charsave.length() << ")";
 			}
 			}, [client_id](Net::D2DBSClient::GetDataFailureReason reason) {
 				LOG(ERROR) << "Can't get charsave for client " << client_id;
@@ -217,27 +234,122 @@ LOG(INFO) << "All D2 patches applied successfully";
 		);
 	}
 
-	GamePlayer D2Server::CallbackFindPlayerToken(std::string charname, join_request_token token, int game_id)
+	D2Server::PlayerRef D2Server::CallbackFindPlayerToken(std::string charname, join_request_token token, int game_id)
 	{
 		std::lock_guard<std::mutex> guard(mutex_);
 		if (pending_join_requests_.find(token) == pending_join_requests_.end()) {
-			return {};
+			return nullptr;
 		}
 		auto& req = pending_join_requests_[token];
 		if (req.charname != charname || req.game_id != game_id) {
-			return {};
+			return nullptr;
 		}
 		pending_join_requests_.erase(token);
 		return players_[charname];
 	}
 
+	void D2Server::CallbackCloseGame(int game_id)
+	{
+		GameRef curr_game = game(game_id);
+		if (curr_game == nullptr) {
+			LOG(ERROR) << "Game " << game_id << " not found";
+			return;
+		}
+
+		net_manager_->d2dbs_client().GameSignalAsync(curr_game->qualified_game_name(), true);
+		net_manager_->d2cs_client().CloseGameAsync(game_id);
+		games_.erase(game_id);
+		LOG(INFO) << "Game has been closed: " << curr_game->game_name << " (id=" << game_id << ")";
+	}
+
+	void D2Server::Player::UpdateD2CS(bool enter, bool leave)
+	{
+		PROTO_UPDATEGAMEINFO_FLAG flag = PROTO_UPDATEGAMEINFO_FLAG::D2GS_D2CS_UPDATEGAMEINFO_FLAG_UPDATE;
+		if (enter) {
+			flag = PROTO_UPDATEGAMEINFO_FLAG::D2GS_D2CS_UPDATEGAMEINFO_FLAG_ENTER;
+		}
+		if (leave) {
+			flag = PROTO_UPDATEGAMEINFO_FLAG::D2GS_D2CS_UPDATEGAMEINFO_FLAG_LEAVE;
+		}
+
+		parent_.net_manager_->d2cs_client().UpdateGameInfoAsync(flag, game_id, char_level, char_class, 
+			inet_addr(client_ipaddr.c_str()), charname);
+	}
+
+
+	class GameDataGuard {
+	public:
+		GameDataGuard(const GameDataGuard&) = delete;
+		GameDataGuard(int client_id) {
+			game_ = Helper_D2GAME_GetGameByClientID(client_id);
+			client_data_ = Helper_FindClientDataById(game_, client_id);
+		}
+		~GameDataGuard() {
+			Helper_D2GAME_LeaveCriticalSection(game_);
+		}
+		Game* game() {
+			return game_;
+		}
+		ClientData* client_data() {
+			return client_data_;
+		}
+	private:
+		Game* game_;
+		ClientData* client_data_;
+	};
+
+	void D2Server::Player::SendChatMessage(std::string sender, std::string msg, int color)
+	{
+		parent_.OnNextFrame([this, sender, msg, color]() {
+			GameDataGuard g(client_id);
+			Helper_SendChatMessagePacket(g.client_data(), sender, msg, color);
+		});
+	}
+
+	void D2Server::Player::Kick()
+	{
+		parent_.OnNextFrame([this]() {
+			GameDataGuard g(client_id);
+			Helper_SendKick(g.client_data());
+		});
+	}
+
+	void D2Server::Player::Save(std::string& charsave)
+	{
+		parent_.net_manager_->d2dbs_client().SaveCharsaveAsync(acctname, charname, client_ipaddr, charsave);
+	}
+
+	void D2Server::Player::SaveCharinfo(std::string& charinfo)
+	{
+		parent_.net_manager_->d2dbs_client().SaveCharinfoAsync(acctname, charname, charinfo);
+	}
+
+	void D2Server::Player::LeaveGame()
+	{
+		if (locked) {
+			parent_.net_manager_->d2dbs_client().CharLockAsync(acctname, charname, false);
+		}
+		if (in_game) {
+			UpdateD2CS(false, true);
+		}
+		// remove *this from players_ map
+		parent_.players_.erase(charname);
+		LOG(INFO) << "Player " << charname << " removed from map";
+	}
+
+	void D2Server::Player::UpdateLadderInformation(int exp_low, int exp_high, int char_status)
+	{
+		parent_.net_manager_->d2dbs_client().UpdateLadderAsync(acctname, charname, char_class, char_level, 
+			exp_low, exp_high, char_status);
+	}
+
 	void D2Server::ServerLoop() {
-		LOG(WARNING) << "Waiting for auth from D2CS";
 		while (!net_manager_->d2cs_client().authed()) {
+			LOG(WARNING) << "Waiting for auth from D2CS...";
 			Sleep(1000);
 		}
 
-		LOG(WARNING) << "Setting up game server handlers";
+		LOG(INFO) << "Setting up game server handlers";
 		net_manager_->d2cs_client().OnCreateGame([this](t_d2cs_d2gs_creategamereq& req, int& game_id) -> bool {
 			int game_flag = 0x04;
 			if (req.expansion) game_flag |= 0x100000;
@@ -245,18 +357,25 @@ LOG(INFO) << "All D2 patches applied successfully";
 			if (req.ladder)    game_flag |= 0x200000;
 			if (req.difficulty <= 2) game_flag |= ((req.difficulty) << 0x0c);
 			unsigned short out_game_id = 0;
-			LOG(INFO) << "Creating game " << req.gamename << " with flag " << game_flag
-				<< " (expansion=" << (int)req.expansion << ",hardcore=" << (int)req.hardcore 
-				<< ",ladder=" << (int)req.ladder<< ",difficulty=" << (int)req.difficulty << ")";
 			int result = D2Funcs.D2GAME_CreateGame(req.gamename.c_str(), req.gamepass.c_str(), req.gamedesc.c_str(), 
 				game_flag, 0x11, 0x22, 0x33, &out_game_id);
 			if (result) {
-				LOG(INFO) << "Created successfully. Game id is " << out_game_id;
 				game_id = out_game_id;
+
+				std::shared_ptr<GameInfo> game_info = std::make_shared<GameInfo>(
+					*this, game_id, req.gamename);
+				net_manager_->d2dbs_client().GameSignalAsync(game_info->qualified_game_name(), false);
+				games_.emplace(game_id, std::move(game_info));
+
+				LOG(INFO) << "Created game " << req.gamename << "(id=" << out_game_id << ") with flag " << game_flag
+					<< " (expansion=" << (int)req.expansion << ",hardcore=" << (int)req.hardcore
+					<< ",ladder=" << (int)req.ladder << ",difficulty=" << (int)req.difficulty << ")";
 				return true;
 			}
 			else {
-				LOG(ERROR) << "Failed to create the game";
+				LOG(ERROR) << "Failed to create the game " << req.gamename << " with flag " << game_flag
+					<< " (expansion=" << (int)req.expansion << ",hardcore=" << (int)req.hardcore
+					<< ",ladder=" << (int)req.ladder << ",difficulty=" << (int)req.difficulty << ")";
 				return false;
 			}
 		});
@@ -270,9 +389,11 @@ LOG(INFO) << "All D2 patches applied successfully";
 			{
 				std::lock_guard<std::mutex> guard(mutex_);
 				pending_join_requests_[req.token] = r;
-				players_[req.charname] = {req.charname, req.acctname, r.game_id, -1};
+
+				std::shared_ptr<Player> player = std::make_shared<Player>(*this, req.charname, req.acctname, r.client_ipaddr, r.game_id);
+				players_.emplace(req.charname, std::move(player));
 			}
-			LOG(INFO) << "Added request for " << req.charname << "(*" << req.acctname << ") to join game "
+			LOG(INFO) << "Added player " << req.charname << "(*" << req.acctname << ") to join game "
 				<< req.gameid << " (client address is " << req.client_ipaddr << ")";
 			return true;
 		});
@@ -280,10 +401,15 @@ LOG(INFO) << "All D2 patches applied successfully";
 
 		LOG(INFO) << "Entering D2 server loop";
 		while (1) {
-			D2Funcs.D2GAME_10040();
-			if (D2Funcs.D2GAME_10008(0)) {
+			while (on_frame_events_.size() > 0) {
+				auto f = on_frame_events_.front();
+				on_frame_events_.pop_front();
+				f();
+			}
+			D2Funcs.D2GAME_HandleClientPackets();
+			if (D2Funcs.D2GAME_UpdateServerFrame(0)) {
 				// busy
-				D2Funcs.D2GAME_10024(0, 0);
+				D2Funcs.D2GAME_DispatchPacketsToClients(0, 0);
 				Sleep(40);
 			}
 			else {
@@ -292,7 +418,7 @@ LOG(INFO) << "All D2 patches applied successfully";
 			}
 		}
 		D2Funcs.D2GAME_EndAllGames();
-		D2Funcs.D2GAME_10024(1, 0);
+		D2Funcs.D2GAME_DispatchPacketsToClients(1, 0);
 	}
 
 	static D2Server* g_server;
@@ -306,13 +432,101 @@ LOG(INFO) << "All D2 patches applied successfully";
 	extern BOOL __fastcall FindPlayerToken(LPCSTR lpCharName, DWORD dwToken, WORD wGameId,
 		LPSTR lpAccountName, LPPLAYERDATA lpPlayerData, int a1, int a2, int a3, int a4)
 	{
-		GamePlayer player = g_server->CallbackFindPlayerToken(lpCharName, dwToken, wGameId);
-		if (player.game_id == wGameId) {
-			strcpy_s(lpAccountName, 16, player.acctname.c_str());
+		D2Server::PlayerRef player = g_server->CallbackFindPlayerToken(lpCharName, dwToken, wGameId);
+		if (player == nullptr) {
+			return false;
+		}
+		if (player->game_id == wGameId) {
+			strcpy_s(lpAccountName, 16, player->acctname.c_str());
 			*lpPlayerData = (PLAYERDATA)0x01;
 			return true;
 		}
 		return false;
+	}
+
+	extern void __fastcall EnterGame(WORD wGameId, LPCSTR lpCharName, WORD wCharClass,
+		DWORD dwCharLevel, DWORD dwReserved)
+	{
+		D2Server::PlayerRef player = g_server->player(lpCharName);
+		if (player == nullptr) {
+			LOG(ERROR) << "Invalid player " << lpCharName << " entering game";
+		}
+		if (player->game_id != wGameId) {
+			LOG(ERROR) << "GameId for player " << lpCharName << " mismatch";
+		}
+		player->char_class = wCharClass;
+		player->char_level = dwCharLevel;
+		player->in_game = true;
+		player->enter_game_time = std::time(nullptr);
+		player->UpdateD2CS(true, false);
+
+		LOG(INFO) << "Player " << player->charname << "(*" << player->acctname << ") added to game " << wGameId;
+
+		// TODO: use motd from conf
+		player->SendChatMessage("", "Welcome to D2Server REmastered", D2COLOR_ID_RED);
+	}
+
+	extern void __fastcall SaveDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
+		LPCSTR lpAccountName, LPVOID lpSaveData,
+		DWORD dwSize, PLAYERDATA PlayerData)
+	{
+		D2Server::PlayerRef player = g_server->player(lpCharName);
+		if (player == nullptr) {
+			LOG(ERROR) << "Invalid player " << lpCharName << " during SaveDatabaseCharacter";
+		}
+		std::string charsave((const char*)lpSaveData+sizeof(short), dwSize-sizeof(short));
+		player->Save(charsave);
+	}
+
+	extern void __fastcall LeaveGame(LPGAMEDATA lpGameData, WORD wGameId, WORD wCharClass,
+		DWORD dwCharLevel, DWORD dwExpLow, DWORD dwExpHigh,
+		WORD wCharStatus, LPCSTR lpCharName, LPCSTR lpCharPortrait,
+		BOOL bUnlock, DWORD dwZero1, DWORD dwZero2,
+		LPCSTR lpAccountName, PLAYERDATA PlayerData,
+		DWORD dwZero3, DWORD dwZero4, DWORD dwZero5, DWORD dwZero6, DWORD dwZero7, int saveTimestamp)
+	{
+		D2Server::PlayerRef player = g_server->player(lpCharName);
+		if (player == nullptr) {
+			LOG(ERROR) << "Invalid player " << lpCharName << " during LeaveGame";
+		}
+		player->char_class = wCharClass;
+		player->char_level = dwCharLevel;
+
+		std::string portrait(lpCharPortrait);
+		std::string charinfo = assemble_charinfo(player->acctname, player->charname, player->char_class, 
+			player->char_level, dwExpLow, wCharStatus, portrait, player->enter_game_time, g_server->realm_name());
+		player->SaveCharinfo(charinfo);
+		player->LeaveGame();
+	}
+
+	extern void __fastcall CloseGame(WORD wGameId, DWORD dwGameVersion, int nUnitCounter, int nGamePlayTime)
+	{
+		g_server->CallbackCloseGame(wGameId);
+	}
+
+	extern void __fastcall UpdateCharacterLadder(LPCSTR lpCharName, WORD wCharClass,
+		DWORD dwCharLevel, DWORD dwCharExpLow,
+		DWORD dwCharExpHigh, WORD wCharStatus, PLAYERMARK PlayerMark)
+	{
+		D2Server::PlayerRef player = g_server->player(lpCharName);
+		if (player == nullptr) {
+			LOG(ERROR) << "Invalid player " << lpCharName << " during UpdateCharacterLadder";
+		}
+		player->char_class = wCharClass;
+		player->char_level = dwCharLevel;
+		player->UpdateLadderInformation(dwCharExpLow, dwCharExpHigh, wCharStatus);
+	}
+
+	extern void __fastcall UpdateGameInformation(WORD wGameId, LPCSTR lpCharName,
+		WORD wCharClass, DWORD dwCharLevel)
+	{
+		D2Server::PlayerRef player = g_server->player(lpCharName);
+		if (player == nullptr) {
+			LOG(ERROR) << "Invalid player " << lpCharName << " during UpdateGameInformation";
+		}
+		player->char_class = wCharClass;
+		player->char_level = dwCharLevel;
+		player->UpdateD2CS(false, false);
 	}
 
 	#include "LegacyGSCallback.hpp"
@@ -374,5 +588,6 @@ LOG(INFO) << "All D2 patches applied successfully";
 			ServerLoop();
 		}
 	}
+
 
 }

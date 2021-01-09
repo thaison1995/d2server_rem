@@ -25,13 +25,13 @@ typedef unsigned long		bn_long;	/* 4 bytes, not 8 bytes, fix me */
 #endif
 
 #pragma pack(push, 1)
+
 typedef struct
 {
 	bn_short	size;
 	bn_short	type;
 	bn_int		seqno;			/* seqno, set by the sender */
 } t_d2cs_d2gs_header;
-#pragma pack(pop)
 
 typedef struct {
 	bn_short	size;
@@ -39,7 +39,17 @@ typedef struct {
 	bn_int		seqno;			/* seqno, set by the sender */
 } t_d2dbs_d2gs_header;
 
+#pragma pack(pop)
+
 #define CONNECT_CLASS_D2GS_TO_D2CS		0x91
 #define CONNECT_CLASS_D2GS_TO_D2DBS		0x88
+
+#define MAX_GAMENAME_LEN			16
+#define MAX_GAMEPASS_LEN			16
+#define MAX_GAMEDESC_LEN			32
+#define MAX_ACCTNAME_LEN			16
+#define MAX_CHARNAME_LEN			16
+#define MAX_IPADDR_LEN			16
+#define MAX_REALMNAME_LEN			32
 
 #endif /* INCLUDED_BN_TYPES_H */

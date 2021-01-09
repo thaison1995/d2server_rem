@@ -12,7 +12,7 @@ def emit_enum(enum_name, enum_type, values):
     global global_enums
     global_enums[enum_name] = (enum_name, enum_type, values)
 
-def gen_code(input, output):
+def gen_code(input, output, nbo=False):
     global global_structs
     global global_enums
     
@@ -24,8 +24,9 @@ def gen_code(input, output):
     f = open(output, 'w')
     f.write('#ifndef INCLUDED_D2CS_PROTO_HPP\n')
     f.write('#define INCLUDED_D2CS_PROTO_HPP\n\n')
-    f.write('#include <string>\n\n')
-    f.write('#include <sstream>\n\n')
+    f.write('#include <string>\n')
+    f.write('#include <sstream>\n')
+    f.write('#include <WinSock2.h>\n\n')
     f.write('#include "net/bn_types.h"\n\n')
     f.write('using string = std::string;\n\n')
     for enum_name in global_enums:
@@ -59,8 +60,16 @@ def gen_code(input, output):
                     write_c += '    oss << %s;\n' % member_name
                     write_c += '    oss.put((char)0);\n'
                 else:
-                    read_c  += '    iss.read((char*)&%s, sizeof(%s));\n' % (member_name, member_type)
-                    write_c += '    oss.write((char*)&%s, sizeof(%s));\n' % (member_name, member_type)
+                    if nbo and (member_type == 'bn_short' or member_type == 'bn_int'):
+                        ts = 's' if member_type == 'bn_short' else 'l'
+                        read_c  += '    %s nbo_%s;\n' % (member_type, member_name)
+                        read_c  += '    iss.read((char*)&nbo_%s, sizeof(%s));\n' % (member_name, member_type)
+                        read_c  += '    %s = ntoh%s(nbo_%s);\n' % (member_name, ts, member_name)
+                        write_c += '    %s nbo_%s = hton%s(%s);\n' % (member_type, member_name, ts, member_name)
+                        write_c += '    oss.write((char*)&nbo_%s, sizeof(%s));\n' % (member_name, member_type)
+                    else:
+                        read_c  += '    iss.read((char*)&%s, sizeof(%s));\n' % (member_name, member_type)
+                        write_c += '    oss.write((char*)&%s, sizeof(%s));\n' % (member_name, member_type)
                     
         methods_c = ''
         methods_c += "  void ReadFromString(std::string& s) {\n";

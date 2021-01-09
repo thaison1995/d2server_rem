@@ -1,36 +1,3 @@
-
-extern void __fastcall CloseGame(WORD wGameId)
-{
-	return;
-}
-
-
-extern void __fastcall LeaveGame(LPGAMEDATA lpGameData, WORD wGameId, WORD wCharClass,
-	DWORD dwCharLevel, DWORD dwExpLow, DWORD dwExpHigh,
-	WORD wCharStatus, LPCSTR lpCharName, LPCSTR lpCharPortrait,
-	BOOL bUnlock, DWORD dwZero1, DWORD dwZero2,
-	LPCSTR lpAccountName, PLAYERDATA PlayerData,
-	PLAYERMARK PlayerMark, DWORD a1, DWORD a2, DWORD a3, DWORD a4, int a5)
-{
-	return;
-}
-
-
-extern void __fastcall SaveDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
-	LPCSTR lpAccountName, LPVOID lpSaveData,
-	DWORD dwSize, PLAYERDATA PlayerData)
-{
-	return;
-}
-
-
-extern void __fastcall EnterGame(WORD wGameId, LPCSTR lpCharName, WORD wCharClass,
-	DWORD dwCharLevel, DWORD dwReserved)
-
-{
-	return;
-}
-
 extern void __fastcall UnlockDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
 	LPCSTR lpAccountName)
 {
@@ -40,22 +7,6 @@ extern void __fastcall UnlockDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpC
 
 extern void __fastcall RelockDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
 	LPCSTR lpAccountName)
-{
-	return;
-}
-
-
-extern void __fastcall UpdateCharacterLadder(LPCSTR lpCharName, WORD wCharClass,
-	DWORD dwCharLevel, DWORD dwCharExpLow,
-	DWORD dwCharExpHigh, WORD wCharStatus,
-	PLAYERMARK PlayerMark)
-{
-	return;
-}
-
-
-extern void __fastcall UpdateGameInformation(WORD wGameId, LPCSTR lpCharName,
-	WORD wCharClass, DWORD dwCharLevel)
 {
 	return;
 }

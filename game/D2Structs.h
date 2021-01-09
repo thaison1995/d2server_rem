@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef _D2STRUCTS_H
 #define _D2STRUCTS_H
 
@@ -452,64 +450,6 @@ struct CellFile // *.dc6
 	DWORD numdirs;					//0x10
 	DWORD numcells;					//0x14
 	GfxCell* cells[255];			//0x18
-};
-
-struct fnRendererCallbacks
-{
-	BOOL(__fastcall* InitWindow)(HINSTANCE); // 0
-	BOOL(__fastcall* InitPerspective)(GFXSettings* pgfxSettings, GFXHelpers* pfnHelpers); // 1
-	BOOL(__fastcall* Release)(); // 2
-	BOOL(__fastcall* Init)(HANDLE hWnd, int nResolution); // 3
-	BOOL(__fastcall* Shutdown)(); // 4
-	BOOL(__fastcall* EndCutscene)(HANDLE hWnd, int nResolution, int); // 5
-	BOOL(__fastcall* BeginScene)(BOOL bClear, BYTE nRed, BYTE nGreen, BYTE nBlue); // 6
-	BOOL(__fastcall* EndScene1)(); // 7
-	BOOL(__fastcall* EndScene2)(); // 8
-	BOOL(__fastcall* ResizeWin)(HANDLE HWND, int bResolution); // 9
-	BOOL(__fastcall* GetBackBuffer)(D2RGB* pBuffer); // 10
-	BOOL(__fastcall* ActivateWindow)(int Unk, int Contrast); // 11
-	BOOL(__fastcall* SetOption)(int nOption, int nValue); // 12
-	BOOL(__fastcall* BeginCutscene)(); // 13
-	BOOL(__fastcall* PlayCutscene)(const char* szFile, int nResolution, void* pfframe); // 14
-	BOOL(__fastcall* CheckCutscene)(); // 15
-	BOOL(__fastcall* DecodeSmacker)(const char* szsmacker, BYTE* pbuffer, int nVersion); // 16
-	BOOL(__fastcall* PlaySmacker)(void* pcontext); // 17
-	BOOL(__fastcall* CloseSmacker)(void* pcontext); // 18
-	int(__fastcall* GetRenderStats)(); // 19
-	void(__fastcall* GetScreenSize)(int* pwidth, int* pheight); // 20
-	void(__fastcall* SetScaleFactor)(int nFactor); // 21
-	BOOL(__fastcall* SetGamma)(int nGamma); // 22
-	BOOL(__fastcall* CheckGamma)(); // 23
-	BOOL(__fastcall* SetPerspectiveScale)(); // 24
-	BOOL(__fastcall* AdjustPerspective)(int nXpos, int nYpos, int nBais, int* pxadjust, int* pyadjust); // 25
-	BOOL(__fastcall* ScalePerspectivepos)(int nXpos, int nYpos, int nAngle, int* pxpos, int* pypos, BOOL bOrder); // 26
-	BOOL(__fastcall* SetDefperspectivefactor)(); // 27
-	void(__fastcall* SetPalette)(BYTE* pPalette); // 28
-	BOOL(__fastcall* SetPalettetable)(BYTE** pPalette); // 29
-	BOOL(__fastcall* SetGlobalLight)(BYTE nRed, BYTE nGreen, BYTE nBlue); // 30
-	BOOL(__fastcall* DrawGroundTile)(TileContext* pTile, DWORD** pLight, int nXpos, int nYpos, int nWorldXpos, int nWorldYpos, BYTE nAlpha, int nScreenPanels, BOOL bOne); // 31
-	BOOL(__fastcall* DrawPerspectiveImage)(CellContext* pData, unsigned int nXpos, unsigned int nYpos, BYTE dwGamma, D2DrawModes nDrawMode, int nScreenMode, BYTE* pPalette); // 32
-	BOOL(__fastcall* DrawImage)(CellContext* pData, unsigned int nXpos, unsigned int nYpos, BYTE dwGamma, D2DrawModes nDrawMode, BYTE* pPalette); // 33
-	BOOL(__fastcall* DrawColouredImage)(CellContext* pData, int nXpos, int nYpos, BYTE dwGamma, D2DrawModes nDrawMode, int nColor); // 34
-	BOOL(__fastcall* DrawVerticalCropImage)(CellContext* pData, int nXpos, int nYpos, int nSkipLines, int nDrawLines, D2DrawModes nDrawMode); // 35
-	BOOL(__fastcall* DrawShadows)(CellContext* pData, int nXpos, int nYpos); // 36
-	BOOL(__fastcall* DrawImageFast)(CellContext* pData, int nXpos, int nYpos, BYTE nPaletteIndex); // 37
-	BOOL(__fastcall* DrawClippedImage)(CellContext* pData, int nXpos, int nYpos, void* pCropRect, D2DrawModes nDrawMode); // 38
-	BOOL(__fastcall* DrawWallTile)(TileContext* pTile, int nXpos, int nYpos, DWORD** pLight, int nScreenPanels); // 39
-	BOOL(__fastcall* DrawRoofTile)(TileContext* pTile, int nXpos, int nYpos, DWORD** pLight, int nScreenPanels, BYTE nAlpha); // 40
-	BOOL(__fastcall* DrawVisTile)(TileContext* pTile, int nXpos, int nYpos, D2DrawModes nDrawMode, int nScreenPanels); // 41
-	BOOL(__fastcall* DrawRect)(RECT* Prect, BYTE nColor); // 42
-	BOOL(__fastcall* DrawRectEx)(RECT* Prect, BYTE nColor); // 43
-	BOOL(__fastcall* DrawSolidRect)(RECT* Prect, BYTE nColor); // 44
-	BOOL(__fastcall* DrawSquare)(POINT* pos, int nSize, BYTE nColor); // 45
-	BOOL(__fastcall* DrawSolidRectEx)(int nXStart, int nYStart, int nXEnd, int nYEnd, BYTE nColor, D2DrawModes nDrawMode); // 46
-	BOOL(__fastcall* DrawSolidRectAlpha)(int nXStart, int nYStart, int nXEnd, int nYEnd, BYTE nColor, BYTE nAlpha); // 47
-	BOOL(__fastcall* DrawLine)(int nXStart, int nYStart, int nXEnd, int nYEnd, BYTE nColor, BYTE nAlpha); // 48
-	BOOL(__fastcall* ClearScreen)(BOOL bPartial); // 49
-	BOOL(__fastcall* DrawString)(int nXpos, int nYpos, const char* msg, ...); // 50
-	BOOL(__fastcall* DrawLight)(DWORD* plight, DWORD* pplayerlight, int nXpos, int nYpos); // 51
-	BOOL(__fastcall* DebugFillBackBuffer)(int xPos, int yPos); // 52
-	BOOL(__fastcall* ClearCaches)(); // 53
 };
 
 /*
@@ -1654,4 +1594,310 @@ struct RosterUnit {
 	DWORD _9[2];					//0x78
 	RosterUnit* pNext;				//0x80
 };
+
+
+struct TimerQuene;
+
+struct InactiveMonster // sizeof 0x5C
+{
+	DWORD xPos;				//0x00
+	DWORD yPos;				//0x04
+	DWORD dwClassId;		//0x08
+	DWORD dwUnitId;			//0x0C
+	DWORD dwFlags;			//0x10
+	DWORD dwFlags2;			//0x14
+	DWORD dwFlags3;			//0x18
+	DWORD dwOwnerUid;		//0x1C
+	DWORD* pMinionList;		//0x20 -> ai related
+	DWORD* pAi;				//0x24 -> ai related
+	DWORD dwSpecialState;	//0x28
+	DWORD dwMonLvl;			//0x2C
+	WORD dwNameSeed;		//0x30
+	BYTE anEnchants[10];	//0x32 <- 10 is align
+	DWORD dwUniqueIdx;		//0x3C
+	DWORD dwExp;			//0x40
+	DWORD dwMaxLife;		//0x44
+	DWORD dwLife;			//0x48
+	DWORD dwDEAD;			//0x4C '0xDEADDEAD' -> ai arg?
+	DWORD dwMonFlag;		//0x50 '1' if no exp gain flag, '2' if no drop flag
+	DWORD dwGameFrame;		//0x54
+	InactiveMonster* pNext;	//0x58
+};
+
+struct InactiveObject // sizeof 0x34
+{
+	DWORD xPos;				//0x00
+	DWORD yPos;				//0x04
+	DWORD dwType;			//0x08
+	DWORD dwClassId;		//0x0C
+	DWORD dwMode;			//0x10
+	DWORD dwGameFrame;		//0x14
+	DWORD dwFlags;			//0x18
+	DWORD dwFlags2;			//0x1C
+	union
+	{
+		DWORD dwMaxActiveQueue;	//0x20
+		DWORD dwUnitId;			//0x20 Valid if Class id is 59, 60, 100 (portals)
+	};
+	union
+	{
+		DWORD dwMaxActiveQueue2;	//0x24
+		DWORD dwSparkyChest;		//0x24 ??? Valid if Class id is 59, 60, 100 (portals)
+	};
+	DWORD dwIntractType;		//0x28
+	DWORD dwItemCodeToDrop;		//0x2C
+	InactiveObject* pNext;		//0x30
+};
+
+struct InactiveItem // sizeof 0xF + (vary)
+{
+	InactiveItem* pNext;		//0x00
+	// ...
+};
+
+struct InactiveRoom // sizeof(0x18)
+{
+	DWORD dwXStart;					//0x00
+	DWORD dwYStart;					//0x04
+	InactiveItem* pItem;			//0x08
+	InactiveMonster* pMonster;		//0x0C
+	InactiveObject* pObject;		//0x10
+	InactiveRoom* pNextRoom;		//0x14
+};
+
+struct MonsterNode		//sizoef = 0x34
+{
+	WORD nTxtRecord;			//0x00
+	BYTE bRarity;				//0x02
+	BYTE _1;					//0x03
+	DWORD _2;					//0x04
+	DWORD _3;					//0x08
+	DWORD _4;					//0x0C
+	DWORD _5;					//0x10
+	DWORD _6;					//0x14
+	DWORD _7;					//0x18
+	DWORD _8;					//0x1C
+	DWORD _9;					//0x20
+	DWORD _10;					//0x24
+	DWORD _11;					//0x28
+	DWORD _12;					//0x2C
+	DWORD _13;					//0x30
+};
+
+struct MonsterRegion		//sizeof = 0x2E4
+{
+	BYTE nAct;					//0x00
+	BYTE f1[3];					//0x01
+	DWORD nRoomsASSUME;			//0x04
+	DWORD _2;					//0x08
+	DWORD nActiveRooms;			//0x0C
+	BYTE nNodes;				//0x10
+	BYTE mRaritySum;			//0x11
+	BYTE nSpawned;				//0x12
+	BYTE f11;					//0x13				
+	MonsterNode hNodes[13];		//0x14
+	DWORD bMonDensity;			//0x2B8
+	BYTE bMonUniqMin;			//0x2BC
+	BYTE bMonUniqMax;			//0x2BD
+	BYTE bMonWndr;				//0x2BE
+	BYTE f2BF;					//0x2BF
+	DWORD nLevel;				//0x2C0
+	DWORD nOtherMonsterCounter;	//0x2C4
+	DWORD _5;					//0x2C8
+	DWORD nMonstersASSUME;		//0x2CC
+	DWORD nMonstersAligmented;	//0x2D0
+	DWORD dword2D4;				//0x2D4
+	BYTE nQuest;				//0x2D8
+	BYTE f2D9[3];				//0x2D9
+	DWORD dwMonLvl;				//0x2DC
+	DWORD dwMonLvlCopy;			//0x2E0
+};
+
+struct ObjectShrines
+{
+	DWORD nEffectClass[8];
+	DWORD* pShrineIdx[8]; // -> points to structure contains txt id
+};
+
+struct ObjectLevel // size 0x90
+{
+	BYTE nAct;				//0x00
+	BYTE _1;				//0x01
+	WORD _2;				//0x02
+	DWORD _3;				//0x04 some counter
+	DWORD nRooms;			//0x08 inited as 7FFFFFFFh,  !(pRoom->dwRoomFlags & 0x800000) for every room in level
+	DWORD _5[4];			//0x0C
+	DWORD _6;				//0x1C  intied as -1
+	DWORD _7;				//0x20
+	DWORD _9[28];			//0x24
+};
+
+struct ObjectRegion // sizeof 0x1114
+{
+	DWORD GameSeed[2];		//0x00
+	ObjectShrines hShrines; //0x04
+	ObjectLevel* pLevel[256];     //0x48 -> x90 struct 0x08, first entry unused
+	DWORD _3[100];
+	DWORD _4[100];
+	DWORD _5[100];
+	DWORD _6[100];
+	DWORD _7[100];
+	DWORD _8[100];
+	DWORD _9[100];
+	DWORD _10[68];
+	DWORD hShrines2[50];
+	DWORD _12;				//0x1110
+};
+
+struct QuestControl;
+struct UnitNode;
+struct NpcControl;
+struct Party;
+
+#include "D2MemPool.h"
+
+struct Game
+{
+	DWORD _1[3];						//0x00
+	DWORD* ptGameData8;					//0x0C
+	Game* pNext;						//0x10
+	DWORD _1a;							//0x14
+	CRITICAL_SECTION* ptLock;			//0x18
+	D2PoolManagerStrc* pMemPool;		//0x1C - not used, always NULL
+	void* GameData;						//0x20
+	DWORD _2;							//0x24
+	WORD  nServerToken;					//0x28 called 'Server Ticket' aswell
+	char GameName[16];					//0x2A
+	char GamePass[16];					//0x3A
+	char GameDesc[32];					//0x4A
+	BYTE GameType;						//0x6A - whenever this is single player (etc)
+	BYTE bArenaLvlId;					//0x6B
+	BYTE _3;							//0x6C
+	BYTE DifficultyLevel;				//0x6D
+	BYTE _4[2];							//0x6E
+	DWORD bExpansion;					//0x70
+	DWORD ldGameType;					//0x74
+	WORD  ItemFormat;					//0x78
+	WORD  _5;							//0x7A
+	DWORD InitSeed;						//0x7C
+	DWORD ObjSeed;						//0x80 - seed used for object spawning
+	DWORD InitSeed2;					//0x84 (another instance, dunno why)
+	ClientData* pClientList;			//0x88 - (pClient structure of last player that entered the game)
+	DWORD nClients;						//0x8C
+	DWORD nUnits[6];					//0x90 - array of 6 counters, one for each unit type, this is the next GUID used too
+	DWORD GameFrame;					//0xA8 - the current frame of the game, used for timers (buff duration etc)
+	DWORD _6[3];						//0xAC
+	TimerQuene* pTimerQueue;			//0xB8 a queue of all current active and inactive timers
+	Act* pDrlgAct[5];					//0xBC
+	union {
+		DWORD GameSeed[2];				//0xD0
+		__int64 GameSeed64;				//0xD0
+		D2Seed hSeed;					//0xD0
+	};
+	InactiveRoom* pDrlgRoomList[5];		//0xD8
+	DWORD MonSeed;						//0xEC - seed used for monster spawning
+	MonsterRegion* pMonsterRegion[1024];//0xF0 - one pointer for each of the 1024 possible levels
+	ObjectRegion* pObjectRegion;		//0x10F0 - a controller holding all object region structs
+	QuestControl* pQuestControl;		//0x10F4 - a controller holding all quest info
+	UnitNode* pOldNodes[10];			//0x10F8 - ten lists of unit node lists, this is used by the AI target seeking code (and other stuff)
+	UnitAny* pUnitList[5][128];			//0x1120 - 5 lists of 128 lists of units (see pUnit documentation), second index is GUID & 127, BEWARE: since ever, missiles are array #4 and items are array #3 (so type3=index4 and type4=index3)
+	DWORD* pTileList;					//0x1B20 - a list for all VisTile units
+	DWORD UniqueFlags[128];				//0x1B24 - 128 DWORDS worth of flags that control if a unique item got spawned [room for 4096]
+	NpcControl* pNpcControl;			//0x1D24 - a controller holding all npc info (like store inventories, merc list)
+	Arena* pArenaControl;				//0x1D28 - a controller for arena stuff, functional and also used in game init
+	Party* pPartyControl;				//0x1D2C - a controller for all party related stuff
+	BYTE BossFlags[64];					//0x1D30 - 64 bytes for handling 512 super unique monsters (if they were spawned etc)
+	DWORD MonModeData[17];				//0x1D70 - related to monsters changing mode
+	DWORD nMonModeData;					//0x1DB4 - counter related to the above
+	DWORD _7;							//0x1DB8
+	DWORD nCreateTick;					//0x1DBC
+	DWORD _8;							//0x1DC0
+	DWORD nSyncTimer;					//0x1DC4 - used to sync events
+	DWORD _9[8];						//0x1DC8
+	BOOL bKilledBaal;					//0x1DE8 - killed uber baal
+	BOOL bKilledDia;					//0x1DEC - killed uber diablo
+	BOOL bKilledMeph;					//0x1DF0 - killed uber mephisto
+};
+
+
+struct DebugGameInfo
+{
+	DebugGameInfo* pSelf;
+	DWORD dwClientId;
+	DWORD dwFlags;
+	char* szClientMsg;
+	DWORD aThousand;
+	DWORD dword14;
+	DWORD dword18;
+	DWORD dwJoinTick;
+	DWORD dword20;
+	DWORD dword24;
+	DWORD dword28;
+	DWORD dword2c;
+	DWORD pAntiCheatData;
+};
+
+struct ClientData //size 0x518
+{
+	DWORD ClientID;                 //0x00 
+	DWORD InitStatus;			   //0x04 Flag 0x4 - player is in game
+	WORD ClassId;                   //0x08 Something with Arena, also could be equivalent of ClassId
+	WORD PlayerStatus;			   //0x0A 0x4 connected, 0x8 death, 0x20 expansion char
+	BYTE ClassId2;				   //0x0C
+	char CharName[16];			   //0x0D 
+	char AccountName[16];		   //0x1D 
+	BYTE _3[50];                   //0x2D 
+	DWORD pPlayerData;			   //0x60
+	DWORD _4;		               //0x64
+	DebugGameInfo* pGameData;	   //0x68 (seems to be added by d2gs, not by original blizz game) 
+	DWORD CharPortrait[64];        //0x6C 
+	DWORD UnitType;				   //0x16C
+	DWORD UnitId;                   //0x170
+	UnitAny* pPlayerUnit;           //0x174
+	DWORD _6;	                   //0x178 some bool
+	void* ptSaveFile;			   //0x17C
+	DWORD nOpenSize;				   //0x180
+	DWORD _7[3];					   //0x184
+	FILETIME* dwSaveStamp;			   //0x190 <- validated on 1.13d
+	DWORD _7a[5];					   //0x194
+	Game* pGame;					   //0x1A8 
+	DWORD ActNo;					   //0x1AC
+	DWORD _8;	                   //0x1B0
+	Room1* ptRoom;				   //0x1B4
+	PacketData* Packet[3];		   //0x1B8
+	DWORD _10[132];				   //0x1C4
+	DWORD dwFlags;				   //0x3D4
+	DWORD LastPacketTime;		   //0x3D8 GetTickCount()
+	struct
+	{
+		WORD SkillId;
+		WORD SkillUnk;
+		DWORD SkillFlags;
+	} ClientHotKeys[16];  		   //0x3DC 
+	DWORD bWeaponSwitch;			   //0x45C
+	DWORD _11[10];				   //0x460
+	DWORD dwCharCreateStamp;       //0x488 (creation time read from d2s)
+	DWORD InactivityTime;		   //0x48C (seconds)
+	WORD CurrentLife;			   //0x490
+	WORD CurrentMana;			   //0x492
+	WORD CurrentStamina;			   //0x494
+	BYTE LifePotionPercent;		   //0x496
+	BYTE ManaPotionPercent;		   //0x497
+	WORD xPos;					   //0x498
+	WORD yPos;					   //0x49A
+	WORD xTargetOffset;			   //0x49C send by packets 0x96, 0x95, 0x18 (last arg) its converted to BYTE
+	WORD yTargetOffset;			   //0x49E like above
+	DWORD BodyGold;				   //0x4A0
+	DWORD CurrentExp;			   //0x4A4
+	ClientData* ptPrevious;  	   //0x4A8 
+	ClientData* ptNextByID;		   //0x4AC 
+	ClientData* ptNextByName;       //0x4B0
+	DWORD _12[19];				   //0x4B4
+	DWORD SentPings;				   //0x500 Increasing every 10 secs
+	DWORD bNeedToKnow;			   //0x504 u can set this true by packet 0x70
+	DWORD ExpLoss;				   //0x508 its temp value, dont use
+	DWORD LocaleID;				   //0x50C
+	DWORD _13[2];                   //0x510 2 last elements are unused
+};
+
 #endif

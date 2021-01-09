@@ -1,6 +1,7 @@
 # D2Server REMastered
 
 This is a work in progress, you are welcome to contribute.
+For now this server can work with basic gaming experience.
 
 ## Goal
 
@@ -10,16 +11,11 @@ To create a remastered D2GS with modern C++, for extensibility and ease of maint
 * No precompiled binary except for those binaries from D2
 
 ## Current Status
-* Some of the basic functionalities are already in place
-* Now we can up game server and communicate with D2CS
+* All basic functionalities have been implemnted and verified
 * Only Game Version 1.13 is supported (no plan to support others, however feel free to contribute)
 * Cannot get rid of D2Server.dll completely because doing so would result in improperly initialized Storm.dll (will fix soon)
 
 ### TBD
-* D2Game callbacks are not properly implemented
-* D2DBS client is not properly implemented
-* Most patches from marsgod's D2GS are not ported
-* Player joining game and gaming experience are not verified
 * Admin console (for observability)
 * Prometheus metrics exporter (for observaility)
 

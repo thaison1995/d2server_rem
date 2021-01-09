@@ -1,11 +1,12 @@
 #ifndef INCLUDED_D2DBS_CLIENT_H
 #define INCLUDED_D2DBS_CLIENT_H
 
-#include "generated/d2dbs_proto.hpp"
 #include "d2xs_client.hpp"
 
 #include <map>
 #include <mutex>
+
+#include "generated/d2dbs_proto.hpp"
 
 namespace Net {
 	class D2DBSClient {
@@ -33,11 +34,13 @@ namespace Net {
 		void GetCharsaveDataAsync(std::string acctname, std::string charname, 
 			get_data_success_handler success_handler, get_data_failure_handler failure_handler);
 
-		void SaveCharsaveAsync();
-		void SaveCharinfoAsync();
-		void UpdateLadderAsync();
-		void CharLockAsync();
-		void CloseSignalAsync();
+		void SaveCharsaveAsync(std::string acctname, std::string charname, std::string ipaddr, 
+			std::string& charsave);
+		void SaveCharinfoAsync(std::string acctname, std::string charname, std::string& charinfo);
+		void CharLockAsync(std::string acctname, std::string charname, bool lock);
+		void UpdateLadderAsync(std::string acctname, std::string charname, int char_class, int char_level, 
+			int exp_low, int exp_high, int char_status);
+		void GameSignalAsync(std::string gamename, bool close);
 
 	private:
 		D2XSClient<t_d2dbs_d2gs_header> net_client_;

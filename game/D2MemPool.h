@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INCLUDED_D2MEM_POOL_H
+#define INCLUDED_D2MEM_POOL_H
 
 #include <Windows.h>
 
@@ -59,3 +60,6 @@ struct D2MemoryManagerStrc						//sizeof 0xBEA4
 	size_t nManagerIndex[8];					//+BE80
 	size_t nFreeManagers;						//+BEA0
 };
+
+
+#endif

@@ -155,9 +155,9 @@ _d2f D2Funcs = { 0 }; void SetupD2Funcs() {
 		EXFUNCPTR(FOG, SetQServerParams, int, __stdcall, (int*), -10185)
 		EXFUNCPTR(D2NET, StartQServer, int, __stdcall, (DWORD, DWORD), -10005)
 
-		EXFUNCPTR(D2GAME, 10040, int, __stdcall, (), -10040)
-		EXFUNCPTR(D2GAME, 10008, int, __stdcall, (DWORD), -10008)
-		EXFUNCPTR(D2GAME, 10024, int, __stdcall, (DWORD, DWORD), -10024)
+		EXFUNCPTR(D2GAME, HandleClientPackets, int, __stdcall, (), -10040)
+		EXFUNCPTR(D2GAME, UpdateServerFrame, int, __stdcall, (DWORD), -10008)
+		EXFUNCPTR(D2GAME, DispatchPacketsToClients, int, __stdcall, (DWORD, DWORD), -10024)
 		EXFUNCPTR(D2GAME, EndAllGames, int, __stdcall, (), -10006)
 		EXFUNCPTR(D2GAME, SetupCallbackTable, int, __stdcall, (void*), -10048)
 		EXFUNCPTR(D2GAME, SetupCallback01, int, __stdcall, (void*, int*), -10037)
@@ -166,7 +166,7 @@ _d2f D2Funcs = { 0 }; void SetupD2Funcs() {
 			const char* lpGameDesc, DWORD dwGameFlag,
 			BYTE bTemplate, BYTE bReserved1, BYTE bReserved2, LPWORD pwGameId), -10044)
 		EXFUNCPTR(D2GAME, SendDatabaseCharacter, int, __stdcall, (DWORD dwClientId, LPVOID lpSaveData,
-			DWORD dwSize, DWORD dwTotalSize, BOOL bLock, DWORD dwReserved1, LPPLAYERINFO lpPlayerInfo, 
+			DWORD dwSize, DWORD dwTotalSize, BOOL bLock, DWORD dwReserved1, void* lpPlayerInfo, 
 			DWORD dwReserved2), -10035)
 
 		EXFUNCPTR(STORM, SFileSetPlatform, void, __stdcall, (int dwPlatform), -278)
@@ -182,6 +182,9 @@ _d2p D2Ptrs = { 0 };
 void SetupD2Pointers() {
 #endif
 
+		EXASMPTR(D2GAME, GetGameByClientID_I, 0x2AB70)
+		EXASMPTR(D2GAME, LeaveCriticalSection_I, 0x29BA0)
+		EXASMPTR(D2GAME, SendPacket_I, 0x8A3E0)
 
 		EXASMPTR(D2NET, ReceivePacket_I, -10001) // k [isPacketCorrect]
 		EXASMPTR(D2GAME, FindFreeCoords_I, 0xE0000)

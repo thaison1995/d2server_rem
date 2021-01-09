@@ -2,8 +2,8 @@
 #define INCLUDED_D2CS_PROTO_HPP
 
 #include <string>
-
 #include <sstream>
+#include <WinSock2.h>
 
 #include "net/bn_types.h"
 
@@ -54,6 +54,7 @@ struct t_d2gs_d2dbs_save_charsave_request
   bn_short changedist;
   string acctname;
   string charname;
+  string gamename;
   string ipaddr;
   string item_record;
   std::string data;
@@ -66,6 +67,7 @@ struct t_d2gs_d2dbs_save_charsave_request
     iss.read((char*)&changedist, sizeof(bn_short));
     std::getline(iss, acctname, '\0');
     std::getline(iss, charname, '\0');
+    std::getline(iss, gamename, '\0');
     std::getline(iss, ipaddr, '\0');
     std::getline(iss, item_record, '\0');
     data.resize(datalen);
@@ -81,6 +83,8 @@ struct t_d2gs_d2dbs_save_charsave_request
     oss << acctname;
     oss.put((char)0);
     oss << charname;
+    oss.put((char)0);
+    oss << gamename;
     oss.put((char)0);
     oss << ipaddr;
     oss.put((char)0);
