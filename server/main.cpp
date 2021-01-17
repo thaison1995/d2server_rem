@@ -1,6 +1,4 @@
-#define GOOGLE_GLOG_DLL_DECL
-#include <glog/logging.h>
-
+#include "server/logger.h"
 #include "net/net_manager.h"
 #include "server/d2server.h"
 #include "global.h"

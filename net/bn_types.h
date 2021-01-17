@@ -1,5 +1,5 @@
-#ifndef INCLUDED_BN_TYPES_H
-#define INCLUDED_BN_TYPES_H
+#ifndef INCLUDED_NET_BN_TYPES_H
+#define INCLUDED_NET_BN_TYPES_H
 
 
 /* basic bn types */

@@ -1,5 +1,5 @@
-#ifndef INCLUDED_GLOBAL_H
-#define INCLUDED_GLOBAL_H
+#ifndef INCLUDED_SERVER_GLOBAL_H
+#define INCLUDED_SERVER_GLOBAL_H
 
 enum ShutdownReason {
 	NET_FAILURE,

@@ -1,5 +1,5 @@
-#ifndef INCLUDED_D2DBS_CLIENT_H
-#define INCLUDED_D2DBS_CLIENT_H
+#ifndef INCLUDED_NET_D2DBS_CLIENT_H
+#define INCLUDED_NET_D2DBS_CLIENT_H
 
 #include "d2xs_client.hpp"
 

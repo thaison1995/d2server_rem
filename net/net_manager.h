@@ -1,13 +1,12 @@
-#ifndef INCLUDED_NET_MANAGER_H
-#define INCLUDED_NET_MANAGER_H
+#ifndef INCLUDED_NET_NET_MANAGER_H
+#define INCLUDED_NET_NET_MANAGER_H
 
 #include "d2cs_client.h"
 #include "d2dbs_client.h"
 
 #include <string>
 
-#undef ERROR
-#include <glog/logging.h>
+#include "server/logger.h"
 
 #include <thread>
 #include <memory>

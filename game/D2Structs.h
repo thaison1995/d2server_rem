@@ -1,5 +1,5 @@
-#ifndef _D2STRUCTS_H
-#define _D2STRUCTS_H
+#ifndef INCLUDED_GAME_D2_STRUCTS_H
+#define INCLUDED_GAME_D2_STRUCTS_H
 
 #include "D2DataTables.h"
 #include "D2PacketDef.h"

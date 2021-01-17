@@ -1,5 +1,5 @@
-#ifndef _D2PACKETDEF_H
-#define _D2PACKETDEF_H
+#ifndef INCLUDED_GAME_D2_PACKET_DEF_H
+#define INCLUDED_GAME_D2_PACKET_DEF_H
 
 #pragma pack(push, 1)
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _D2CONSTANTS_H
-#define _D2CONSTANTS_H
+#ifndef INCLUDED_GAME_D2_CONSTANTS_H
+#define INCLUDED_GAME_D2_CONSTANTS_H
 
 
 /*

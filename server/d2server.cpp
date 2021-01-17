@@ -1,5 +1,4 @@
-#define GOOGLE_GLOG_DLL_DECL
-#include <glog/logging.h>
+#include "server/logger.h"
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
@@ -28,6 +27,8 @@
 
 #include "game/HelperFunction.hpp"
 #include "net/d2cs_d2gs_character.h"
+
+#include "turbo/engine.h"
 
 namespace Server {
 	int __stdcall ErrorHandler(int addr, int a2, int a3, char* fmt...) {

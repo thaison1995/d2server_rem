@@ -12,8 +12,8 @@
 	use it at your own risk.
 */
 
-#ifndef INCLUDED_D2SERVER_LIB_H
-#define INCLUDED_D2SERVER_LIB_H
+#ifndef INCLUDED_SERVER_D2SERVER_LIB_H
+#define INCLUDED_SERVER_D2SERVER_LIB_H
 
 #include "colorcode.h"
 #include <Windows.h>

@@ -1,5 +1,5 @@
-#ifndef INCLUDED_D2SERVER_H
-#define INCLUDED_D2SERVER_H
+#ifndef INCLUDED_SERVER_D2SERVER_H
+#define INCLUDED_SERVER_D2SERVER_H
 
 #include "net/net_manager.h"
 #include "game/D2MemPool.h"

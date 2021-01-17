@@ -1,5 +1,5 @@
-#ifndef INCLUDED_D2MEM_POOL_H
-#define INCLUDED_D2MEM_POOL_H
+#ifndef INCLUDED_GAME_D2MEM_POOL_H
+#define INCLUDED_GAME_D2MEM_POOL_H
 
 #include <Windows.h>
 

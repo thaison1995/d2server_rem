@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INCLUDED_GAME_MPQ_HELPER_H
+#define INCLUDED_GAME_MPQ_HELPER_H
 
 #include <Windows.h>
 
@@ -24,3 +25,5 @@ struct MPQ_Handle {
 };
 
 int FindInMPQ(const char* fileName);
+
+#endif

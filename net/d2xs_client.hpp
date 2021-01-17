@@ -1,5 +1,5 @@
-#ifndef INCLUDED_D2CX_CLIENT_HPP
-#define INCLUDED_D2CX_CLIENT_HPP
+#ifndef INCLUDED_NET_D2CX_CLIENT_HPP
+#define INCLUDED_NET_D2CX_CLIENT_HPP
 
 #include <thread>
 #include <functional>
@@ -11,8 +11,7 @@
 #include <deque>
 #include <map>
 
-#undef ERROR
-#include <glog/logging.h>
+#include "server/logger.h"
 
 #include "bn_types.h"
 

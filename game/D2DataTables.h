@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _D2DATATABLES_H
-#define _D2DATATABLES_H
+#ifndef INCLUDED_GAME_D2_DATA_TABLES_H
+#define INCLUDED_GAME_D2_DATA_TABLES_H
 #define VER_113D
 
 struct ArenaTxt
