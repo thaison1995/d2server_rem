@@ -13,7 +13,6 @@ To create a remastered D2GS with modern C++, for extensibility and ease of maint
 ## Current Status
 * All basic functionalities have been implemnted and verified
 * Only Game Version 1.13 is supported (no plan to support others, however feel free to contribute)
-* Cannot get rid of D2Server.dll completely because doing so would result in improperly initialized Storm.dll (will fix soon)
 
 ### TBD
 * Admin console (for observability)
@@ -25,6 +24,10 @@ To create a remastered D2GS with modern C++, for extensibility and ease of maint
 * Step 1: Run cmake_vs2019.bat
 * Step 2: Build generated vs2019 solution: build/d2server_rem.sln
 
+## Setup Instructions
+* Place d2server_rem.exe to your Diablo II 1.13 game directory
+* Copy d2server_config.yaml to your Diablo II 1.13 game directory and modify accordingly
+* Run d2server_rem.exe
 
 ## Credit
 * Thanks onlyer/faster and marsgod for his D2Server, made reverse engineering possible for me to figure out how D2Server should work
