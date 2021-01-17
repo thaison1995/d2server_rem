@@ -22,6 +22,7 @@ struct ServerConfig {
 	bool logging_output_to_stderr;
 
 	int gs_max_games;
+	std::string gs_motd;
 
 };
 

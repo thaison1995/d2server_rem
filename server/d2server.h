@@ -4,6 +4,8 @@
 #include "net/net_manager.h"
 #include "game/D2MemPool.h"
 
+#include "game/D2Structs.h"
+
 #include <ctime>
 #include <unordered_map>
 
@@ -105,6 +107,7 @@ namespace Server {
 		public:
 			int game_id;
 			std::string game_name;
+			Game* pGame;
 
 			GameInfo(const GameInfo&) = delete;
 			GameInfo(D2Server& parent, int game_id, std::string game_name) :
@@ -126,6 +129,20 @@ namespace Server {
 			return games_[game_id];
 		}
 
+		using GamePacketFilter = std::function<void(PlayerRef player, UnitAny* pUnit, const char* packet, 
+			Game* pGame, int len)>;
+		void RegisterGamePacketFilter(char packet_type, GamePacketFilter filter) {
+			game_packet_filters_[packet_type].push_back(filter);
+		}
+
+		using SysPacketFilter = std::function<void(int client_id, const char* packet)>;
+		void RegisterSysPacketFilter(char packet_type, SysPacketFilter filter) {
+			sys_packet_filters_[packet_type].push_back(filter);
+		}
+
+		void  __cdecl CallbackParseGamePacket(UnitAny* pUnit, const char* packet, Game* pGame, int len);
+		void  __cdecl CallbackParseSysPacket(int* data);
+
 	private:
 		EventCallbackTable callback_table_;
 		D2PoolManagerStrc* game_pool_managers_;
@@ -135,6 +152,9 @@ namespace Server {
 		std::unordered_map<std::string, PlayerRef> players_;
 		std::unordered_map<int, GameRef> games_;
 		std::mutex mutex_;
+
+		std::map<char, std::vector<SysPacketFilter>> sys_packet_filters_;
+		std::map<char, std::vector<GamePacketFilter>> game_packet_filters_;
 
 		using OnFrameEvent = std::function<void()>;
 		std::deque<OnFrameEvent> on_frame_events_;

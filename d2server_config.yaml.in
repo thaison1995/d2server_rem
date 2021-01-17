@@ -11,3 +11,4 @@ logging:
 
 gs:
   max_games: 50
+  motd: Welcome to D2Server REmastered

@@ -185,6 +185,8 @@ void SetupD2Pointers() {
 		EXASMPTR(D2GAME, GetGameByClientID_I, 0x2AB70)
 		EXASMPTR(D2GAME, LeaveCriticalSection_I, 0x29BA0)
 		EXASMPTR(D2GAME, SendPacket_I, 0x8A3E0)
+		EXASMPTR(D2GAME, ParseIncomingPacket_I, 0xCC550)
+		EXASMPTR(D2GAME, ParseCreatePacket_I, 0xCAF30)
 
 		EXASMPTR(D2NET, ReceivePacket_I, -10001) // k [isPacketCorrect]
 		EXASMPTR(D2GAME, FindFreeCoords_I, 0xE0000)

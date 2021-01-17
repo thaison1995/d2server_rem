@@ -2,15 +2,15 @@
 #include "D2Structs.h"
 
 static Game* Helper_D2GAME_GetGameByClientID(DWORD dwClientId) {
-	Game* ret;
+	Game* lpGame;
 	__asm {
 		push esi
 		mov esi, dwClientId
 		call D2Ptrs.D2GAME_GetGameByClientID_I
 		pop esi
-		mov ret, eax
+		mov lpGame, eax
 	}
-	return ret;
+	return lpGame;
 }
 
 static ClientData* Helper_FindClientDataById(Game* pGame, DWORD ClientID)

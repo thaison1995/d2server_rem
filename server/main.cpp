@@ -31,6 +31,7 @@ void load_server_config(std::string& filename) {
 	g_server_config.d2dbs_port = config["d2dbs"]["port"].as<int>();
 	g_server_config.logging_output_to_stderr = config["logging"]["output_to_stderr"].as<bool>();
 	g_server_config.gs_max_games = config["gs"]["max_games"].as<int>();
+	g_server_config.gs_motd = config["gs"]["motd"].as<std::string>();
 }
 
 int main(int argc, char** argv)
@@ -58,5 +59,12 @@ int main(int argc, char** argv)
 	LOG(INFO) << "Bringing up d2server";
 
 	Server::D2Server server(net_manager);
+
+	// example for packet filtering
+	server.RegisterGamePacketFilter((char)0x01, [&](Server::D2Server::PlayerRef player, UnitAny* pUnit, 
+		const char* packet, Game* pGame, int len) {
+		player->SendChatMessage("admin", "Packet received: 0x01", D2COLOR_ID_BLUE);
+	});
+
 	server.Run();
 }

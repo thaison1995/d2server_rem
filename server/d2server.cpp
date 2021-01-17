@@ -32,6 +32,8 @@ extern "C" int  __declspec(dllimport) __stdcall Storm_913(short* a1, char* a2, i
 #include "server/global.h"
 
 namespace Server {
+	static D2Server* g_server;
+
 	int __stdcall ErrorHandler(int addr, int a2, int a3, char* fmt...) {
 		va_list args;
 		va_start(args, fmt);
@@ -62,7 +64,102 @@ namespace Server {
 		SetupD2Funcs();
 	}
 
-	static void* dword_func00;
+	static void* D2CLIENT_pGameList;
+
+	_declspec(naked) void ParseGamePacket_Stub() {
+		// ebx: packet data
+		// esi: player unit
+		// esp+4h: game
+		// esp+8h: unk
+		__asm {
+			push ebp
+			mov ebp, esp
+			add ebp, 4
+
+			push ecx
+			push ebx
+			push esi
+
+			mov eax, [ebp+08h]
+			push eax  // unk
+			mov eax, [ebp+04h]
+			push eax  // game
+			push ebx  // packet
+			push esi  // unit
+
+			mov ecx, [g_server]
+			push ecx
+			call D2Server::CallbackParseGamePacket
+			add esp, 4
+
+			pop esi
+			pop ebx
+			call D2Ptrs.D2GAME_ParseIncomingPacket_I
+
+			add esp, 8h
+			pop ecx
+			pop ebp
+			retn 8h
+		}
+	}
+
+	_declspec(naked) void ParseSysPacket_Stub() {
+		__asm {
+			push ebp
+			mov ebp, esp
+			add ebp, 4
+			push ecx
+
+			mov eax, [ebp+04h]
+			push eax
+			mov ecx, [g_server]
+			push ecx
+
+			call D2Server::CallbackParseSysPacket
+			add esp, 4
+
+			call D2Ptrs.D2GAME_ParseCreatePacket_I
+			pop ecx
+			pop ebp
+			retn 4h
+		}
+	}
+
+	void __cdecl D2Server::CallbackParseGamePacket(UnitAny* pUnit, const char* packet, Game* pGame, int len)
+	{
+		const char packet_type = packet[0];
+		LOG(INFO) << "GamePacket type=0x" << std::hex << (int)packet_type;
+
+		if (game_packet_filters_.find(packet_type) != game_packet_filters_.end()) {
+			ClientData* client_data = pUnit->pPlayerData->pClientData;
+			std::string charname = client_data->CharName;
+			PlayerRef player;
+			if (players_.find(charname) != players_.end()) {
+				player = players_[charname];
+			}
+			else {
+				player = nullptr;
+				LOG(ERROR) << "Player " << charname << " not found in map but received game packet type=0x" << std::hex << int(packet_type) << " len=" << len;
+			}
+			for (auto filter_func : game_packet_filters_[packet_type]) {
+				filter_func(player, pUnit, packet, pGame, len);
+			}
+		}
+	}
+
+	void __cdecl D2Server::CallbackParseSysPacket(int* data)
+	{
+		int client_id = *data;
+		const char* packet = (char*)&data[1];
+		const char packet_type = packet[0];
+		LOG(INFO) << "SysPacket type=0x" << std::hex << (int)packet[0];
+		
+		if (sys_packet_filters_.find(packet_type) != sys_packet_filters_.end()) {
+			for (auto filter_func : sys_packet_filters_[packet_type]) {
+				filter_func(client_id, packet);
+			}
+		}
+	}
 
 	void D2Server::OnNextFrame(OnFrameEvent f)
 	{
@@ -98,13 +195,15 @@ namespace Server {
 		const char patchData[] = { 0x59, 0x58, 0x51, 0x33, 0xC0, 0xC3 };
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0xDD10), (DWORD)patchData, 6, "");
 
+		// suppress warnings for too many memory pools
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x1AEF9), (WORD)0x31EB, 2, "");
 
+		// replace mempools
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x1AEDF), Fog_D2MemoryPool_pManagers, 4, "");
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x1B98A), Fog_D2MemoryPool_pManagers, 4, "");
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x10F78), (DWORD)0, 4, "");
 
-		// avoid setting 6FFA6E74 to 1
+		// avoid setting 6FFA6E74 to 1 (related to OS version, may cause access violation)
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
 		Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");
 
@@ -114,7 +213,12 @@ namespace Server {
 		// from patch table 
 		Patch(PATCH_CUSTOM, GetDllOffset("D2Game.dll", 0x52743), (WORD)0xEB09, 2, "");
 
-		dword_func00 = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
+		// game packet handling (0x00 ~ 0x67)
+		Patch(PATCH_CALL, GetDllOffset("D2Game.dll", 0xCAF15), (DWORD)ParseGamePacket_Stub, 5, "");
+		// sys packet handling (0x68 ~)
+		Patch(PATCH_CALL, GetDllOffset("D2Game.dll", 0x2E47E), (DWORD)ParseSysPacket_Stub, 5, "");
+
+		D2CLIENT_pGameList = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
 
 		LOG(INFO) << "All D2 patches applied successfully";
 	}
@@ -158,7 +262,7 @@ namespace Server {
 		D2Funcs.FOG_InitLogManager(logPrefix);
 
 		LOG(INFO) << "Initializing FOG System";
-		D2Funcs.FOG_InitSystem("Diablo II Game Server", NULL, "D2GSLib 1.10.3.4 Build On Feb 29 2004 22:31:15", 1);
+		D2Funcs.FOG_InitSystem("Diablo II Game Server", NULL, "D2GS Remastered built on " __DATE__, 1);
 
 		// Storm ordinal func list: https://github.com/nickshanks/Alkor/blob/master/Source/MPQReader.m
 		D2Funcs.FOG_SetWorkingDirectory(0, 0);
@@ -174,10 +278,9 @@ namespace Server {
 		}
 
 		void* mpqHandle = 0;
-		int vret2 = FindInMPQ("DATA\\LOCAL\\FONT\\LATIN\\DEFAULT.MAP");
-		int vret = D2Funcs.FOG_MPQFileOpen("DATA\\LOCAL\\FONT\\LATIN\\DEFAULT.MAP", &mpqHandle);
+		int ret = D2Funcs.FOG_MPQFileOpen("DATA\\LOCAL\\FONT\\LATIN\\DEFAULT.MAP", &mpqHandle);
 
-		if (!vret) {
+		if (!ret) {
 			LOG(ERROR) << "Something went wrong with MPQs: errno " << GetLastError();
 			return -1;
 		}
@@ -200,7 +303,7 @@ namespace Server {
 		D2Funcs.D2GAME_SetupCallbackTable(&callback_table_);
 
 		int v7 = 0;
-		D2Funcs.D2GAME_SetupCallback01(dword_func00, &v7);
+		D2Funcs.D2GAME_SetupCallback01(D2CLIENT_pGameList, &v7);
 		D2Funcs.D2GAME_SetupCallback02();
 
 		LOG(INFO) << "D2GSInit finished";
@@ -216,7 +319,7 @@ namespace Server {
 		curr_player->client_id = client_id;
 
 		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname,
-			[acctname, charname, client_id, &curr_player](bool allow_ladder, int char_create_time, std::string charsave) {
+			[acctname, charname, client_id, curr_player](bool allow_ladder, int char_create_time, std::string charsave) {
 			curr_player->locked = true;
 			D2GamePlayerInfo pi;
 			pi.PlayerMark = 0;
@@ -370,7 +473,7 @@ namespace Server {
 				net_manager_->d2dbs_client().GameSignalAsync(game_info->qualified_game_name(), false);
 				games_.emplace(game_id, std::move(game_info));
 
-				LOG(INFO) << "Created game " << req.gamename << "(id=" << out_game_id << ") with flag " << game_flag
+				LOG(INFO) << "Created game " << req.gamename << "(id=" << out_game_id << ") with flag 0x" << std::hex << game_flag
 					<< " (expansion=" << (int)req.expansion << ",hardcore=" << (int)req.hardcore
 					<< ",ladder=" << (int)req.ladder << ",difficulty=" << (int)req.difficulty << ")";
 				return true;
@@ -424,8 +527,6 @@ namespace Server {
 		D2Funcs.D2GAME_DispatchPacketsToClients(1, 0);
 	}
 
-	static D2Server* g_server;
-
 	extern void __fastcall GetDatabaseCharacter(DWORD* lpGameData, LPCSTR lpCharName,
 		DWORD dwClientId, LPCSTR lpAccountName)
 	{
@@ -465,8 +566,8 @@ namespace Server {
 
 		LOG(INFO) << "Player " << player->charname << "(*" << player->acctname << ") added to game " << wGameId;
 
-		// TODO: use motd from conf
-		player->SendChatMessage("", "Welcome to D2Server REmastered", D2COLOR_ID_RED);
+		std::string motd = server_config().gs_motd;
+		player->SendChatMessage("", motd, D2COLOR_ID_RED);
 	}
 
 	extern void __fastcall SaveDatabaseCharacter(DWORD* lpGameData, LPCSTR lpCharName,
