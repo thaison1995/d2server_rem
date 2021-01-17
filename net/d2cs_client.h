@@ -5,6 +5,8 @@
 
 #include "generated/d2cs_proto.hpp"
 
+#include <prometheus/counter.h>
+
 namespace Net {
 	class D2CSClient {
 	public:
@@ -23,7 +25,7 @@ namespace Net {
 		}
 
 		void SetGSInfoAsync(int max_game, int game_flag);
-		void UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level, 
+		void UpdateGameInfoAsync(PROTO_UPDATEGAMEINFO_FLAG flag, int game_id, int char_level,
 			int char_class, int addr, std::string charname);
 		void CloseGameAsync(int game_id);
 

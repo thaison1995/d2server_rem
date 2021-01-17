@@ -12,6 +12,18 @@
 
 #include <fstream>
 
+#include <prometheus/registry.h>
+#include <prometheus/exposer.h>
+#ifdef _DEBUG
+#pragma comment(lib, "prometheus-cpp-cored.lib")
+#pragma comment(lib, "prometheus-cpp-pulld.lib")
+#else
+#pragma comment(lib, "prometheus-cpp-core.lib")
+#pragma comment(lib, "prometheus-cpp-pull.lib")
+#endif
+
+#include <sstream>
+
 void global_shutdown_handler(ShutdownReason reason, ShutdownAction action) {
 	LOG(INFO) << "Shutting down because: " << reason;
 	ExitProcess(0);
@@ -32,6 +44,20 @@ void load_server_config(std::string& filename) {
 	g_server_config.logging_output_to_stderr = config["logging"]["output_to_stderr"].as<bool>();
 	g_server_config.gs_max_games = config["gs"]["max_games"].as<int>();
 	g_server_config.gs_motd = config["gs"]["motd"].as<std::string>();
+	g_server_config.metrics_enabled = config["metrics"]["enabled"].as<bool>();
+	g_server_config.metrics_exposer_host = config["metrics"]["exposer_host"].as<std::string>();
+	g_server_config.metrics_exposer_port = config["metrics"]["exposer_port"].as<int>();
+}
+
+std::shared_ptr<prometheus::Registry> g_registry;
+
+bool metrics_enabled()
+{
+	return server_config().metrics_enabled;
+}
+
+std::shared_ptr<prometheus::Registry> metrics_registry() {
+	return g_registry;
 }
 
 int main(int argc, char** argv)
@@ -50,6 +76,22 @@ int main(int argc, char** argv)
 	google::InitGoogleLogging(argv[0]);
 	LOG(INFO) << "Using config file: " << config_file;
 
+	std::unique_ptr<prometheus::Exposer> exposer;
+	if (server_config().metrics_enabled) {
+		std::stringstream ss;
+		ss << server_config().metrics_exposer_host;
+		ss << ":";
+		ss << server_config().metrics_exposer_port;
+		std::string endpoint = ss.str();
+
+		LOG(INFO) << "Enableing metrics exposer on " << endpoint;
+		exposer = std::make_unique<prometheus::Exposer>(endpoint);
+		g_registry = std::make_shared<prometheus::Registry>();
+		exposer->RegisterCollectable(g_registry);
+	}
+	else {
+		exposer = nullptr;
+	}
 	LOG(INFO) << "Initializing D2Server REmastered";
 
 	Net::NetManagerRef net_manager =

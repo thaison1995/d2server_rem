@@ -12,3 +12,7 @@ logging:
 gs:
   max_games: 50
   motd: Welcome to D2Server REmastered
+
+metrics:
+  enabled: true
+  exposer_port: 4001

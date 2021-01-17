@@ -1,6 +1,8 @@
 #ifndef INCLUDED_SERVER_GLOBAL_H
 #define INCLUDED_SERVER_GLOBAL_H
 
+#include <prometheus/registry.h>
+
 enum ShutdownReason {
 	NET_FAILURE,
 	COMMAND
@@ -24,8 +26,14 @@ struct ServerConfig {
 	int gs_max_games;
 	std::string gs_motd;
 
+	bool metrics_enabled;
+	std::string metrics_exposer_host;
+	int metrics_exposer_port;
 };
 
 const ServerConfig& server_config();
+
+bool metrics_enabled();
+std::shared_ptr<prometheus::Registry> metrics_registry();
 
 #endif
