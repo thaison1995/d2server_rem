@@ -19,6 +19,13 @@ To create a remastered D2GS with modern C++, for extensibility and ease of maint
 * Admin console (for observability)
 * Prometheus metrics exporter (for observaility)
 
+## Build Instructions
+* CMake 3.14 or higher version is required
+* VS2019 or higher version is required
+* Step 1: Run cmake_vs2019.bat
+* Step 2: Build generated vs2019 solution: build/d2server_rem.sln
+
+
 ## Credit
 * Thanks onlyer/faster and marsgod for his D2Server, made reverse engineering possible for me to figure out how D2Server should work
 * Thanks [D2Template project](https://github.com/ThePhrozenKeep/D2Template) for a good template to start working on
