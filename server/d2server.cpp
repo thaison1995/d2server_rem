@@ -28,8 +28,6 @@
 #include "game/HelperFunction.hpp"
 #include "net/d2cs_d2gs_character.h"
 
-#include "turbo/engine.h"
-
 namespace Server {
 	int __stdcall ErrorHandler(int addr, int a2, int a3, char* fmt...) {
 		va_list args;
