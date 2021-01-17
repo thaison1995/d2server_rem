@@ -1,0 +1,13 @@
+d2cs:
+  host: 127.0.0.1
+  port: 6113
+
+d2dbs:
+  host: 127.0.0.1
+  port: 6114
+
+logging:
+  output_to_stderr: true
+
+gs:
+  max_games: 50

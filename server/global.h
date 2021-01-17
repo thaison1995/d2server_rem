@@ -13,4 +13,18 @@ enum ShutdownAction {
 
 void global_shutdown_handler(ShutdownReason reason, ShutdownAction action = ShutdownAction::HALT);
 
+struct ServerConfig {
+	std::string d2cs_host;
+	int d2cs_port;
+	std::string d2dbs_host;
+	int d2dbs_port;
+
+	bool logging_output_to_stderr;
+
+	int gs_max_games;
+
+};
+
+const ServerConfig& server_config();
+
 #endif

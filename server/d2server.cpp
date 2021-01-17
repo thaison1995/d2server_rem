@@ -19,7 +19,8 @@
 
 #include <string>
 
-#pragma comment(lib, "server/d2server.lib")
+extern "C" int  __declspec(dllimport) __stdcall Storm_913(short* a1, char* a2, int a3);
+#pragma comment(lib, "game/storm.lib")
 
 #include "game/MPQHelper.h"
 
@@ -27,6 +28,8 @@
 
 #include "game/HelperFunction.hpp"
 #include "net/d2cs_d2gs_character.h"
+
+#include "server/global.h"
 
 namespace Server {
 	int __stdcall ErrorHandler(int addr, int a2, int a3, char* fmt...) {
@@ -129,16 +132,17 @@ namespace Server {
 		// fog memory pool: https://d2mods.info/forum/viewtopic.php?f=8&t=61294&p=476474#p476474
 		LOG(INFO) << "Initializing Storm";
 
-		// because d2server.lib is statically linked and it imports storm.dll
+		// we've created a storm.lib that is statically linked 
+		// and we are gonna call a random function here to prevent lazy loading
 		// this somehow triggered some magic that helps storm.dll to initialize its mpq crypt table
 		// if we don't do this, we will end up with corrupted mpq archives in memory
-		LPD2GSINTERFACE		lpD2GSInterface;
-		lpD2GSInterface = ::QueryInterface();
+		Storm_913(NULL, NULL, 0);
 
+		LOG(INFO) << "Initializing D2 env";
 		InitD2Env();
 
 		LOG(INFO) << "Creating D2 game memory pools";
-		DWORD memSize = sizeof(D2PoolManagerStrc) * 102;
+		DWORD memSize = sizeof(D2PoolManagerStrc) * (server_config().gs_max_games+2);
 		game_pool_managers_ = (D2PoolManagerStrc*)VirtualAlloc(0, memSize, MEM_COMMIT, PAGE_READWRITE);
 		if (!game_pool_managers_) {
 			LOG(ERROR) << "Failed to create memory pools";
@@ -214,11 +218,11 @@ namespace Server {
 		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname,
 			[acctname, charname, client_id, &curr_player](bool allow_ladder, int char_create_time, std::string charsave) {
 			curr_player->locked = true;
-			PLAYERINFO pi;
+			D2GamePlayerInfo pi;
 			pi.PlayerMark = 0;
 			pi.dwReserved = 0;
-			strcpy_s((char*)&pi.AcctName, 16, curr_player->acctname.c_str());
-			strcpy_s((char*)&pi.CharName, 16, curr_player->charname.c_str());
+			strcpy_s((char*)&pi.AcctName, MAX_ACCTNAME_LEN, curr_player->acctname.c_str());
+			strcpy_s((char*)&pi.CharName, MAX_CHARNAME_LEN, curr_player->charname.c_str());
 			if (!D2Funcs.D2GAME_SendDatabaseCharacter(client_id, (void*)charsave.c_str(),
 				charsave.length(), charsave.length(), false, 0, &pi, 0x1)) {
 				LOG(ERROR) << "Failed to call D2GAME_SendDatabaseCharacter";
@@ -396,7 +400,7 @@ namespace Server {
 				<< req.gameid << " (client address is " << req.client_ipaddr << ")";
 			return true;
 		});
-		net_manager_->d2cs_client().SetGSInfoAsync(100, 0);
+		net_manager_->d2cs_client().SetGSInfoAsync(server_config().gs_max_games, 0);
 
 		LOG(INFO) << "Entering D2 server loop";
 		while (1) {
@@ -422,22 +426,22 @@ namespace Server {
 
 	static D2Server* g_server;
 
-	extern void __fastcall GetDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
+	extern void __fastcall GetDatabaseCharacter(DWORD* lpGameData, LPCSTR lpCharName,
 		DWORD dwClientId, LPCSTR lpAccountName)
 	{
 		g_server->CallbackGetDatabaseCharacter(lpAccountName, lpCharName, dwClientId);
 	}
 
 	extern BOOL __fastcall FindPlayerToken(LPCSTR lpCharName, DWORD dwToken, WORD wGameId,
-		LPSTR lpAccountName, LPPLAYERDATA lpPlayerData, int a1, int a2, int a3, int a4)
+		LPSTR lpAccountName, DWORD* lpPlayerData, int a1, int a2, int a3, int a4)
 	{
 		D2Server::PlayerRef player = g_server->CallbackFindPlayerToken(lpCharName, dwToken, wGameId);
 		if (player == nullptr) {
 			return false;
 		}
 		if (player->game_id == wGameId) {
-			strcpy_s(lpAccountName, 16, player->acctname.c_str());
-			*lpPlayerData = (PLAYERDATA)0x01;
+			strcpy_s(lpAccountName, MAX_ACCTNAME_LEN, player->acctname.c_str());
+			*lpPlayerData = 0x01;
 			return true;
 		}
 		return false;
@@ -465,9 +469,9 @@ namespace Server {
 		player->SendChatMessage("", "Welcome to D2Server REmastered", D2COLOR_ID_RED);
 	}
 
-	extern void __fastcall SaveDatabaseCharacter(LPGAMEDATA lpGameData, LPCSTR lpCharName,
+	extern void __fastcall SaveDatabaseCharacter(DWORD* lpGameData, LPCSTR lpCharName,
 		LPCSTR lpAccountName, LPVOID lpSaveData,
-		DWORD dwSize, PLAYERDATA PlayerData)
+		DWORD dwSize, DWORD* PlayerData)
 	{
 		D2Server::PlayerRef player = g_server->player(lpCharName);
 		if (player == nullptr) {
@@ -477,11 +481,11 @@ namespace Server {
 		player->Save(charsave);
 	}
 
-	extern void __fastcall LeaveGame(LPGAMEDATA lpGameData, WORD wGameId, WORD wCharClass,
+	extern void __fastcall LeaveGame(DWORD* lpGameData, WORD wGameId, WORD wCharClass,
 		DWORD dwCharLevel, DWORD dwExpLow, DWORD dwExpHigh,
 		WORD wCharStatus, LPCSTR lpCharName, LPCSTR lpCharPortrait,
 		BOOL bUnlock, DWORD dwZero1, DWORD dwZero2,
-		LPCSTR lpAccountName, PLAYERDATA PlayerData,
+		LPCSTR lpAccountName, DWORD* PlayerData,
 		DWORD dwZero3, DWORD dwZero4, DWORD dwZero5, DWORD dwZero6, DWORD dwZero7, int saveTimestamp)
 	{
 		D2Server::PlayerRef player = g_server->player(lpCharName);
@@ -505,7 +509,7 @@ namespace Server {
 
 	extern void __fastcall UpdateCharacterLadder(LPCSTR lpCharName, WORD wCharClass,
 		DWORD dwCharLevel, DWORD dwCharExpLow,
-		DWORD dwCharExpHigh, WORD wCharStatus, PLAYERMARK PlayerMark)
+		DWORD dwCharExpHigh, WORD wCharStatus, DWORD playerMark)
 	{
 		D2Server::PlayerRef player = g_server->player(lpCharName);
 		if (player == nullptr) {
@@ -528,64 +532,88 @@ namespace Server {
 		player->UpdateD2CS(false, false);
 	}
 
-	#include "LegacyGSCallback.hpp"
+	extern void __fastcall UnlockDatabaseCharacter(DWORD* lpGameData, LPCSTR lpCharName,
+		LPCSTR lpAccountName)
+	{
+		return;
+	}
 
-	D2Server::D2Server(bool legacy, Net::NetManagerRef net_manager)
-		:legacy_(legacy), net_manager_(net_manager)
+	extern void __fastcall RelockDatabaseCharacter(DWORD* lpGameData, LPCSTR lpCharName,
+		LPCSTR lpAccountName)
+	{
+		return;
+	}
+
+	extern DWORD __fastcall SetGameData(void)
+	{
+		return 0x87654321;
+	}
+
+	extern void __fastcall SaveDatabaseGuild(DWORD dwReserved1, DWORD dwReserved2,
+		DWORD dwReserved3)
+	{
+		return;
+	}
+
+	extern void __fastcall ReservedCallback1(DWORD dwReserved1, DWORD dwReserved2)
+	{
+		return;
+	}
+
+	extern void __fastcall ReservedCallback2(DWORD dwReserved1, DWORD dwReserved2,
+		DWORD dwReserved3)
+	{
+		return;
+	}
+
+	extern void __fastcall LoadComplete(WORD wGameId, LPCSTR lpCharName, BOOL bExpansion)
+	{
+		return;
+	}
+
+	extern void __cdecl	ServerLogMessage(DWORD dwCount, LPCSTR lpFormat, ...)
+	{
+		va_list     ap;
+
+		va_start(ap, lpFormat);
+		LOG(INFO) << "ServerLogMessage: " << lpFormat << ap;
+		va_end(ap);
+		return;
+	}
+
+	void SetupCallbackTable(EventCallbackTable& gEventCallbackTable) {
+		gEventCallbackTable.fpCloseGame = CloseGame;
+		gEventCallbackTable.fpLeaveGame = LeaveGame;
+		gEventCallbackTable.fpGetDatabaseCharacter = GetDatabaseCharacter;
+		gEventCallbackTable.fpSaveDatabaseCharacter = SaveDatabaseCharacter;
+		gEventCallbackTable.fpServerLogMessage = ServerLogMessage;
+		gEventCallbackTable.fpEnterGame = EnterGame;
+		gEventCallbackTable.fpFindPlayerToken = FindPlayerToken;
+		gEventCallbackTable.fpUnlockDatabaseCharacter = UnlockDatabaseCharacter;
+		gEventCallbackTable.fpRelockDatabaseCharacter = RelockDatabaseCharacter;
+		gEventCallbackTable.fpUpdateCharacterLadder = UpdateCharacterLadder;
+		gEventCallbackTable.fpUpdateGameInformation = UpdateGameInformation;
+		gEventCallbackTable.fpSetGameData = SetGameData;
+		gEventCallbackTable.fpReserved1 = ReservedCallback1;
+		gEventCallbackTable.fpReserved2 = ReservedCallback2;
+		gEventCallbackTable.fpSaveDatabaseGuild = SaveDatabaseGuild;
+		gEventCallbackTable.fpLoadComplete = LoadComplete;
+	}
+
+	D2Server::D2Server(Net::NetManagerRef net_manager)
+		: net_manager_(net_manager)
 	{
 		g_server = this;
 
 		SetupCallbackTable(callback_table_);
-
-		gs_info_.szVersion = "GSRem";
-		gs_info_.dwLibVersion = 0x010A0304;
-		gs_info_.bIsNT = 1;
-		gs_info_.bEnablePatch = 1;
-		gs_info_.fpEventLog = (EventLogFunc)GSLog;
-		gs_info_.fpErrorHandle = (FARPROC)D2GSErrorHandle;
-		gs_info_.fpCallback = &callback_table_;
-		gs_info_.bPreCache = 1;
-		gs_info_.dwIdleSleep = 40;
-		gs_info_.dwBusySleep = 40;
-		gs_info_.dwMaxGame = 16;
-		gs_info_.dwReserved0 = 1200;
-		gs_info_.bStop = FALSE;
-		HANDLE			hObjects[2];
-		hObjects[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
-		gs_info_.hEventInited = hObjects[0];
-		memset(gs_info_.dwReserved, 0, sizeof(DWORD) * 24);
 	}
 
 	void D2Server::Run()
 	{
-		if (legacy_) {
-			::D2GSStartFunc gsStart;
-			LPD2GSINTERFACE		lpD2GSInterface;
-
-			lpD2GSInterface = ::QueryInterface();
-
-			gsStart = lpD2GSInterface->D2GSStart;
-
-			InitD2Env();
-
-			// avoid setting 6FFA6E74 to 1
-			Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x118FD), (DWORD)0x90909090, 4, "");
-			Patch(PATCH_CUSTOM, GetDllOffset("Fog.dll", 0x11901), (BYTE)0x90, 1, "");
-			DWORD addr = (DWORD)D2Funcs.D2GAME_SetupCallback01;
-
-			DWORD			dwThreadId;
-			CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)gsStart, &gs_info_, 0, &dwThreadId);
-
-			Sleep(500);
-
-			Sleep(500000);
+		if (ServerInit() != 0) {
+			throw std::exception("Failed to initialize D2Server");
 		}
-		else {
-			if (ServerInit() != 0) {
-				throw std::exception("Failed to initialize D2Server");
-			}
-			ServerLoop();
-		}
+		ServerLoop();
 	}
 
 

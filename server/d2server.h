@@ -3,12 +3,41 @@
 
 #include "net/net_manager.h"
 #include "game/D2MemPool.h"
-#include "d2server_lib.h"
 
 #include <ctime>
 #include <unordered_map>
 
+#include "colorcode.h"
+
 namespace Server {
+	struct EventCallbackTable
+	{
+		void* fpCloseGame;                          // 0x00
+		void* fpLeaveGame;                          // 0x04
+		void* fpGetDatabaseCharacter;               // 0x08
+		void* fpSaveDatabaseCharacter;              // 0x0C
+		void* fpServerLogMessage;                   // 0x10
+		void* fpEnterGame;                          // 0x14
+		void* fpFindPlayerToken;                    // 0x18
+		void* fpSaveDatabaseGuild;                  // 0x1C
+		void* fpUnlockDatabaseCharacter;            // 0x20
+		void* fpReserved1;                          // 0x24
+		void* fpUpdateCharacterLadder;              // 0x28
+		void* fpUpdateGameInformation;              // 0x2C
+		void* fpReserved2;                          // 0x30
+		void* fpSetGameData;                        // 0x34
+		void* fpRelockDatabaseCharacter;            // 0x38
+		void* fpLoadComplete;                       // 0x3C
+		void* fpReservedDebug[10]; 	/* ignore this,just for internal debug */
+	};
+	struct D2GamePlayerInfo {
+		DWORD    	PlayerMark;
+		DWORD		dwReserved;
+		UCHAR		CharName[16];
+		UCHAR		AcctName[16];
+	};
+
+
 	using join_request_token = int;
 	struct JoinRequest {
 		int token;
@@ -21,7 +50,7 @@ namespace Server {
 	class D2Server {
 	public:
 		D2Server(const D2Server&) = delete;
-		D2Server(bool legacy, Net::NetManagerRef net_manager);
+		D2Server(Net::NetManagerRef net_manager);
 		void Run();
 
 		void CallbackGetDatabaseCharacter(std::string acctname, std::string charname, int client_id);
@@ -98,9 +127,7 @@ namespace Server {
 		}
 
 	private:
-		bool legacy_;
-		D2GSINFO gs_info_;
-		EVENTCALLBACKTABLE callback_table_;
+		EventCallbackTable callback_table_;
 		D2PoolManagerStrc* game_pool_managers_;
 		Net::NetManagerRef net_manager_;
 		std::unordered_map<join_request_token, JoinRequest> pending_join_requests_;
