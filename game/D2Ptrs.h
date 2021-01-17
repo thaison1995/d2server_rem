@@ -154,6 +154,7 @@ _d2f D2Funcs = { 0 }; void SetupD2Funcs() {
 		EXFUNCPTR(D2COMMON, LoadDataTables, int, __stdcall, (void*, int, int), -10943)
 		EXFUNCPTR(FOG, SetQServerParams, int, __stdcall, (int*), -10185)
 		EXFUNCPTR(D2NET, StartQServer, int, __stdcall, (DWORD, DWORD), -10005)
+		EXFUNCPTR(D2NET, AddClientToHackList, int, __stdcall, (int, char*, int), -10001)
 
 		EXFUNCPTR(D2GAME, HandleClientPackets, int, __stdcall, (), -10040)
 		EXFUNCPTR(D2GAME, UpdateServerFrame, int, __stdcall, (DWORD), -10008)

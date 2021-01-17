@@ -92,11 +92,20 @@ namespace Server {
 			call D2Server::CallbackParseGamePacket
 			add esp, 4
 
+			test eax, eax
+			jnz drop
+
 			pop esi
 			pop ebx
 			call D2Ptrs.D2GAME_ParseIncomingPacket_I
 
 			add esp, 8h
+			pop ecx
+			pop ebp
+			retn 8h
+
+			drop:
+			add esp, 18h
 			pop ecx
 			pop ebp
 			retn 8h
@@ -118,47 +127,80 @@ namespace Server {
 			call D2Server::CallbackParseSysPacket
 			add esp, 4
 
+			test eax, eax
+			jnz drop
+
 			call D2Ptrs.D2GAME_ParseCreatePacket_I
+			pop ecx
+			pop ebp
+			retn 4h
+
+			drop:
+			add esp, 4h
 			pop ecx
 			pop ebp
 			retn 4h
 		}
 	}
 
-	void __cdecl D2Server::CallbackParseGamePacket(UnitAny* pUnit, const char* packet, Game* pGame, int len)
+	D2Server::PacketFilterAction __cdecl D2Server::CallbackParseGamePacket(UnitAny* pUnit,
+		const char* packet, Game* pGame, int len)
 	{
 		const char packet_type = packet[0];
 		LOG(INFO) << "GamePacket type=0x" << std::hex << (int)packet_type;
 
+		PacketFilterAction result = PacketFilterAction::PASS;
+		ClientData* client_data = pUnit->pPlayerData->pClientData;
+		std::string charname = client_data->CharName;
+		PlayerRef player;
+		if (players_.find(charname) != players_.end()) {
+			player = players_[charname];
+		}
+		else {
+			player = nullptr;
+			LOG(ERROR) << "Player " << charname << " not found in map but received game packet type=0x" << std::hex << int(packet_type) << " len=" << len;
+		}
+
 		if (game_packet_filters_.find(packet_type) != game_packet_filters_.end()) {
-			ClientData* client_data = pUnit->pPlayerData->pClientData;
-			std::string charname = client_data->CharName;
-			PlayerRef player;
-			if (players_.find(charname) != players_.end()) {
-				player = players_[charname];
-			}
-			else {
-				player = nullptr;
-				LOG(ERROR) << "Player " << charname << " not found in map but received game packet type=0x" << std::hex << int(packet_type) << " len=" << len;
-			}
 			for (auto filter_func : game_packet_filters_[packet_type]) {
-				filter_func(player, pUnit, packet, pGame, len);
+				merge_filter_action(result, filter_func(player, pUnit, packet, pGame, len));
 			}
 		}
+
+		if (result == PacketFilterAction::KICK) {
+			player->Kick();
+			LOG(WARNING) << "Kicking player " << charname << " (reason: packet filter)";
+		}
+		else if (result == PacketFilterAction::BAN) {
+			D2Funcs.D2NET_AddClientToHackList(client_data->ClientID, __FILE__, __LINE__);
+			LOG(WARNING) << "Adding player " << charname << " to hacklist (reason: packet filter)";
+		}
+		return result;
 	}
 
-	void __cdecl D2Server::CallbackParseSysPacket(int* data)
+	D2Server::PacketFilterAction __cdecl D2Server::CallbackParseSysPacket(int* data)
 	{
 		int client_id = *data;
 		const char* packet = (char*)&data[1];
 		const char packet_type = packet[0];
 		LOG(INFO) << "SysPacket type=0x" << std::hex << (int)packet[0];
-		
+
+		PacketFilterAction result = PacketFilterAction::PASS;
 		if (sys_packet_filters_.find(packet_type) != sys_packet_filters_.end()) {
 			for (auto filter_func : sys_packet_filters_[packet_type]) {
-				filter_func(client_id, packet);
+				merge_filter_action(result, filter_func(client_id, packet));
 			}
 		}
+		if (result == PacketFilterAction::BAN) {
+			D2Funcs.D2NET_AddClientToHackList(client_id, __FILE__, __LINE__);
+			LOG(WARNING) << "Adding client " << client_id << " to hacklist (reason: packet filter)";
+		}
+		return result;
+	}
+
+	void D2Server::merge_filter_action(PacketFilterAction& result, PacketFilterAction current)
+	{
+		result = std::max(result, current);
 	}
 
 	void D2Server::OnNextFrame(OnFrameEvent f)

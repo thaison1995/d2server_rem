@@ -129,19 +129,27 @@ namespace Server {
 			return games_[game_id];
 		}
 
-		using GamePacketFilter = std::function<void(PlayerRef player, UnitAny* pUnit, const char* packet, 
+		enum PacketFilterAction: int {
+			PASS = 0,
+			DROP = 1,
+			KICK = 2,
+			BAN = 3
+		};
+
+		using GamePacketFilter = std::function<PacketFilterAction(PlayerRef player, UnitAny* pUnit, const char* packet,
 			Game* pGame, int len)>;
 		void RegisterGamePacketFilter(char packet_type, GamePacketFilter filter) {
 			game_packet_filters_[packet_type].push_back(filter);
 		}
 
-		using SysPacketFilter = std::function<void(int client_id, const char* packet)>;
+		using SysPacketFilter = std::function<PacketFilterAction(int client_id, const char* packet)>;
 		void RegisterSysPacketFilter(char packet_type, SysPacketFilter filter) {
 			sys_packet_filters_[packet_type].push_back(filter);
 		}
 
-		void  __cdecl CallbackParseGamePacket(UnitAny* pUnit, const char* packet, Game* pGame, int len);
-		void  __cdecl CallbackParseSysPacket(int* data);
+		PacketFilterAction  __cdecl CallbackParseGamePacket(UnitAny* pUnit, const char* packet, Game* pGame, int len);
+		PacketFilterAction  __cdecl CallbackParseSysPacket(int* data);
+		void merge_filter_action(PacketFilterAction& result, PacketFilterAction current);
 
 	private:
 		EventCallbackTable callback_table_;

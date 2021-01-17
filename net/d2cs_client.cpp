@@ -58,7 +58,6 @@ namespace Net {
 			t_d2cs_d2gs_setconffile req;
 			req.ReadFromString(s);
 			LOG(INFO) << "Received conf from d2cs (" << req.conf.length() << " bytes)";
-
 		});
 
 		net_client_.OnPacket(t_d2cs_d2gs_setinitinfo_typecode, [this](std::string& s) {

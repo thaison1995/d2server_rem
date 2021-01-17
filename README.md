@@ -28,6 +28,7 @@ To create a remastered D2GS with modern C++, for extensibility and ease of maint
 * Place d2server_rem.exe to your Diablo II 1.13 game directory
 * Copy d2server_config.yaml to your Diablo II 1.13 game directory and modify accordingly
 * Run d2server_rem.exe
+* The server will be listening on port 4000 (this cannot be changed as it is hardcoded in D2 client) so make sure your port forwarding is setup properly
 
 ## Credit
 * Thanks onlyer/faster and marsgod for his D2Server, made reverse engineering possible for me to figure out how D2Server should work

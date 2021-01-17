@@ -103,10 +103,17 @@ int main(int argc, char** argv)
 	Server::D2Server server(net_manager);
 
 	// example for packet filtering
-	server.RegisterGamePacketFilter((char)0x01, [&](Server::D2Server::PlayerRef player, UnitAny* pUnit, 
-		const char* packet, Game* pGame, int len) {
+	/*
+	server.RegisterGamePacketFilter((char)0x01, [&](Server::D2Server::PlayerRef player, UnitAny* pUnit,
+		const char* packet, Game* pGame, int len) -> Server::D2Server::PacketFilterAction {
 		player->SendChatMessage("admin", "Packet received: 0x01", D2COLOR_ID_BLUE);
+		return Server::D2Server::PacketFilterAction::PASS;
 	});
+	server.RegisterGamePacketFilter((char)0x59, [&](Server::D2Server::PlayerRef player, UnitAny* pUnit,
+		const char* packet, Game* pGame, int len) -> Server::D2Server::PacketFilterAction {
+		return Server::D2Server::PacketFilterAction::KICK;
+	});
+	*/
 
 	server.Run();
 }
