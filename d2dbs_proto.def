@@ -2,33 +2,22 @@ t_d2gs_d2dbs_generic    0x00
   t_d2dbs_d2gs_header  h; 
 end
 
-t_d2gs_d2dbs_save_charsave_request		0x30
+t_d2gs_d2dbs_save_data_request		0x30
   t_d2dbs_d2gs_header  h; 
-  bn_short      datalen;
-  bn_short		ist;
-  bn_short		changedist;
-  string   acctname;
-  string   charname;
-  string   gamename;
-  string   ipaddr;
-  string   item_record;
-  charsave   data[datalen];
-end
-
-t_d2gs_d2dbs_save_charinfo_request		0x40
-  t_d2dbs_d2gs_header  h; 
+  DATATYPE datatype;
   bn_short      datalen;
   string   acctname;
   string   charname;
+  string   realmname;
   charsave   data[datalen];
 end
 
-enum DATATYPE bn_byte
+enum DATATYPE bn_short
   D2GS_DATA_CHARSAVE    0x01
   D2GS_DATA_PORTRAIT    0x02 
 end
 
-enum SAVE_RESULT bn_byte
+enum SAVE_RESULT bn_int
   D2DBS_SAVE_DATA_SUCCESS    0x00
   D2DBS_SAVE_DATA_FAILED    0x01
 end
@@ -37,19 +26,19 @@ t_d2dbs_d2gs_save_data_reply			0x30
 	t_d2dbs_d2gs_header	h;
 	SAVE_RESULT				result;
 	DATATYPE			datatype;
-    string   charname;
+  string   charname;
 end
-
 
 t_d2gs_d2dbs_get_data_request		0x31
   t_d2dbs_d2gs_header  h; 
   DATATYPE      datatype;
   string   acctname;
   string   charname;
+  string   realmname;
 end
 
 
-enum GET_DATA_RESULT bn_byte
+enum GET_DATA_RESULT bn_int
     D2DBS_GET_DATA_SUCCESS		0
     D2DBS_GET_DATA_FAILED		1
     D2DBS_GET_DATA_CHARLOCKED	2
@@ -59,7 +48,7 @@ t_d2dbs_d2gs_get_data_reply		0x31
   t_d2dbs_d2gs_header  h; 
   GET_DATA_RESULT        result; 
   bn_int    charcreatetime;
-  bn_byte    allowladder;
+  bn_int    allowladder;
   DATATYPE      datatype;
   bn_short      datalen; 
   string   charname;
@@ -69,33 +58,27 @@ end
 
 t_d2gs_d2dbs_update_ladder		0x32
  t_d2dbs_d2gs_header h; 
- bn_byte  charlevel; 
+ bn_int  charlevel; 
  bn_int  charexplow; 
  bn_int  charexphigh; 
- bn_byte charclass; 
+ bn_short charclass; 
  bn_short charstatus; 
  string   charname;
+ string   realmname;
 end
-
 
 t_d2gs_d2dbs_char_lock		0x33
   t_d2dbs_d2gs_header h; 
-  bn_byte  lockstatus; 
+  bn_int  lockstatus; 
+  string   acctname;
   string   charname;
+  string   realmname;
 end
-
 
 t_d2dbs_d2gs_echoreq		0x34
 	t_d2dbs_d2gs_header	h;
 end
 
-
 t_d2gs_d2dbs_echoreply		0x34
 	t_d2dbs_d2gs_header	h;
-end
-
-t_d2gs_d2dbs_closesignal		0x37
-	t_d2dbs_d2gs_header	h;
-	bn_byte ifclose;
-    string   gamename;
 end

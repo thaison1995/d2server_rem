@@ -25,6 +25,7 @@ struct ServerConfig {
 
 	int gs_max_games;
 	std::string gs_motd;
+	bool gs_save_all_other_players;
 
 	bool metrics_enabled;
 	std::string metrics_exposer_host;

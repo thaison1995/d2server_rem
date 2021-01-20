@@ -364,6 +364,7 @@ struct GameView // size 0xEABC
 	DWORD _12;
 	DWORD _13[2];
 };
+
 #pragma pack(pop)
 
 struct GFXSettings // size 0x18

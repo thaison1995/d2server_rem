@@ -12,7 +12,9 @@ logging:
 gs:
   max_games: 50
   motd: Welcome to D2Server REmastered
+  save_all_other_players: true
 
 metrics:
   enabled: true
+  exposer_host: 127.0.0.1
   exposer_port: 4001

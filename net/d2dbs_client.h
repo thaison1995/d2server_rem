@@ -31,16 +31,16 @@ namespace Net {
 		using get_data_success_handler = std::function<void(bool allow_ladder, 
 			int char_create_time, std::string charsave)>;
 		using get_data_failure_handler = std::function<void(GetDataFailureReason reason)>;
-		void GetCharsaveDataAsync(std::string acctname, std::string charname, 
+		void GetCharsaveDataAsync(std::string acctname, std::string charname, std::string realmname,
 			get_data_success_handler success_handler, get_data_failure_handler failure_handler);
 
-		void SaveCharsaveAsync(std::string acctname, std::string charname, std::string ipaddr, 
-			std::string& charsave);
-		void SaveCharinfoAsync(std::string acctname, std::string charname, std::string& charinfo);
-		void CharLockAsync(std::string acctname, std::string charname, bool lock);
+		void SaveCharsaveAsync(std::string acctname, std::string charname, std::string realmname, 
+			std::string ipaddr, std::string& charsave);
+		void SaveCharinfoAsync(std::string acctname, std::string charname, std::string realmname, 
+			std::string& charinfo);
+		void CharLockAsync(std::string acctname, std::string charname, std::string realmname, bool lock);
 		void UpdateLadderAsync(std::string acctname, std::string charname, int char_class, int char_level, 
 			int exp_low, int exp_high, int char_status);
-		void GameSignalAsync(std::string gamename, bool close);
 
 	private:
 		D2XSClient<t_d2dbs_d2gs_header> net_client_;

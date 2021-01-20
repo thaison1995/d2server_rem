@@ -31,6 +31,12 @@ t_d2gs_d2cs_setgsinfo 0x12
 	bn_int			gameflag;
 end
 
+t_d2cs_d2gs_setgsinfo 0x12
+    t_d2cs_d2gs_header  h;
+	bn_int			maxgame;
+	bn_int			gameflag;
+end
+
 t_d2cs_d2gs_echoreq 0x13
     t_d2cs_d2gs_header  h;
 end
@@ -104,7 +110,6 @@ t_d2cs_d2gs_joingamereq 0x21
     t_d2cs_d2gs_header  h;
 	bn_int			gameid;
 	bn_int			token;
-	bn_int			vip_expire;
 	string          charname;
 	string          acctname;
 	string          client_ipaddr;

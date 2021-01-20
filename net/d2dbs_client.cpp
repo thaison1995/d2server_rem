@@ -58,7 +58,7 @@ namespace Net {
 		call(s);
 	}
 
-	void D2DBSClient::GetCharsaveDataAsync(std::string acctname, std::string charname,
+	void D2DBSClient::GetCharsaveDataAsync(std::string acctname, std::string charname, std::string realmname,
 			get_data_success_handler success_handler, get_data_failure_handler failure_handler)
 	{
 		int seqno = ++seqno_;
@@ -66,6 +66,7 @@ namespace Net {
 		req.h.seqno = seqno;
 		req.acctname = acctname;
 		req.charname = charname;
+		req.realmname = realmname;
 		req.datatype = PROTO_DATATYPE::D2GS_DATA_CHARSAVE;
 
 		{
@@ -91,44 +92,46 @@ namespace Net {
 		LOG(INFO) << "Request sent to get charsave for " << charname << "(*" << acctname << ")";
 	}
 
-	void D2DBSClient::SaveCharsaveAsync(std::string acctname, std::string charname, std::string ipaddr, std::string& charsave)
+	void D2DBSClient::SaveCharsaveAsync(std::string acctname, std::string charname, std::string realmname, 
+		std::string ipaddr, std::string& charsave)
 	{
 		int seqno = ++seqno_;
-		t_d2gs_d2dbs_save_charsave_request req;
+		t_d2gs_d2dbs_save_data_request req;
 		req.h.seqno = seqno;
+		req.datatype = PROTO_DATATYPE::D2GS_DATA_CHARSAVE;
 		req.datalen = charsave.length();
-		req.ist = 0;
-		req.changedist = 0;
 		req.acctname = acctname;
 		req.charname = charname;
-		req.gamename = "";
-		req.ipaddr = ipaddr;
-		req.item_record = "";
+		req.realmname = realmname;
 		req.data = charsave;
 		net_client_.Send(req.WriteAsString());
 		LOG(INFO) << "Request sent to save charsave for " << charname << "(*" << acctname << "), size is " << charsave.length();
 	}
 
-	void D2DBSClient::SaveCharinfoAsync(std::string acctname, std::string charname, std::string& charinfo)
+	void D2DBSClient::SaveCharinfoAsync(std::string acctname, std::string charname, std::string realmname, std::string& charinfo)
 	{
 		int seqno = ++seqno_;
-		t_d2gs_d2dbs_save_charinfo_request req;
+		t_d2gs_d2dbs_save_data_request req;
 		req.h.seqno = seqno;
+		req.datatype = PROTO_DATATYPE::D2GS_DATA_PORTRAIT;
 		req.datalen = charinfo.length();
 		req.acctname = acctname;
 		req.charname = charname;
+		req.realmname = realmname;
 		req.data = charinfo;
 		net_client_.Send(req.WriteAsString());
 		LOG(INFO) << "Request sent to save charinfo for " << charname << "(*" << acctname << "), size is " << charinfo.length();
 	}
 
-	void D2DBSClient::CharLockAsync(std::string acctname, std::string charname, bool lock)
+	void D2DBSClient::CharLockAsync(std::string acctname, std::string charname, std::string realmname, bool lock)
 	{
 		int seqno = ++seqno_;
 		t_d2gs_d2dbs_char_lock req;
 		req.h.seqno = seqno;
 		req.lockstatus = lock ? 1 : 0;
+		req.acctname = acctname;
 		req.charname = charname;
+		req.realmname = realmname;
 		net_client_.Send(req.WriteAsString());
 		LOG(INFO) << "Request sent to set charlock=" << lock << " for " << charname << "(*" << acctname << ")";
 	}
@@ -147,17 +150,6 @@ namespace Net {
 		req.charname = charname;
 		net_client_.Send(req.WriteAsString());
 		LOG(INFO) << "Sent ladder infromation for " << charname << "(*" << acctname << ")";
-	}
-
-	void D2DBSClient::GameSignalAsync(std::string gamename, bool close)
-	{
-		int seqno = ++seqno_;
-		t_d2gs_d2dbs_closesignal req;
-		req.h.seqno = seqno;
-		req.gamename = gamename;
-		req.ifclose = close ? 1 : 0;
-		net_client_.Send(req.WriteAsString());
-		LOG(INFO) << "Sent d2dbs signal for game " << gamename;
 	}
 
 }

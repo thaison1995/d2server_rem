@@ -209,6 +209,8 @@ namespace Server {
 		on_frame_events_.push_back(f);
 	}
 
+
+
 	void D2Server::PatchD2() {
 		LOG(INFO) << "Patching FOG Exception Handler";
 		Patch(PATCH_CALL, GetDllOffset("Fog.dll", 0x18BA0), (DWORD)ErrorHandler, 5, "");
@@ -259,6 +261,10 @@ namespace Server {
 		Patch(PATCH_CALL, GetDllOffset("D2Game.dll", 0xCAF15), (DWORD)ParseGamePacket_Stub, 5, "");
 		// sys packet handling (0x68 ~)
 		Patch(PATCH_CALL, GetDllOffset("D2Game.dll", 0x2E47E), (DWORD)ParseSysPacket_Stub, 5, "");
+
+		if (server_config().gs_save_all_other_players) {
+			Patch(PATCH_CALL, GetDllOffset("D2Game.dll", 0x4B847), (DWORD)Helper_SavePlayerDataIntercept_STUB, 5, "");
+		}
 
 		D2CLIENT_pGameList = (void*)(*(DWORD*)GetDllOffset("D2Client.dll", 0xCDC21));
 
@@ -360,7 +366,7 @@ namespace Server {
 		}
 		curr_player->client_id = client_id;
 
-		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname,
+		net_manager_->d2dbs_client().GetCharsaveDataAsync(acctname, charname, realm_name(),
 			[acctname, charname, client_id, curr_player](bool allow_ladder, int char_create_time, std::string charsave) {
 			curr_player->locked = true;
 			D2GamePlayerInfo pi;
@@ -404,7 +410,6 @@ namespace Server {
 			return;
 		}
 
-		net_manager_->d2dbs_client().GameSignalAsync(curr_game->qualified_game_name(), true);
 		net_manager_->d2cs_client().CloseGameAsync(game_id);
 		games_.erase(game_id);
 		LOG(INFO) << "Game has been closed: " << curr_game->game_name << " (id=" << game_id << ")";
@@ -464,18 +469,20 @@ namespace Server {
 
 	void D2Server::Player::Save(std::string& charsave)
 	{
-		parent_.net_manager_->d2dbs_client().SaveCharsaveAsync(acctname, charname, client_ipaddr, charsave);
+		parent_.net_manager_->d2dbs_client().SaveCharsaveAsync(acctname, charname, parent_.realm_name(), 
+			client_ipaddr, charsave);
 	}
 
 	void D2Server::Player::SaveCharinfo(std::string& charinfo)
 	{
-		parent_.net_manager_->d2dbs_client().SaveCharinfoAsync(acctname, charname, charinfo);
+		parent_.net_manager_->d2dbs_client().SaveCharinfoAsync(acctname, charname, parent_.realm_name(), 
+			charinfo);
 	}
 
 	void D2Server::Player::LeaveGame()
 	{
 		if (locked) {
-			parent_.net_manager_->d2dbs_client().CharLockAsync(acctname, charname, false);
+			parent_.net_manager_->d2dbs_client().CharLockAsync(acctname, charname, parent_.realm_name(), false);
 		}
 		if (in_game) {
 			UpdateD2CS(false, true);
@@ -512,7 +519,6 @@ namespace Server {
 
 				std::shared_ptr<GameInfo> game_info = std::make_shared<GameInfo>(
 					*this, game_id, req.gamename);
-				net_manager_->d2dbs_client().GameSignalAsync(game_info->qualified_game_name(), false);
 				games_.emplace(game_id, std::move(game_info));
 
 				LOG(INFO) << "Created game " << req.gamename << "(id=" << out_game_id << ") with flag 0x" << std::hex << game_flag
@@ -749,6 +755,14 @@ namespace Server {
 		g_server = this;
 
 		SetupCallbackTable(callback_table_);
+
+
+		RegisterGamePacketFilter((char)0x59, [&](PlayerRef player, UnitAny* pUnit,
+			const char* packet, Game* pGame, int len) -> PacketFilterAction {
+			ClientData* client_data = pUnit->pPlayerData->pClientData;
+			Helper_D2GAME_SaveCharToDatabase(pGame, client_data, pUnit, player->charname.c_str());
+			return PacketFilterAction::PASS;
+		});
 	}
 
 	void D2Server::Run()

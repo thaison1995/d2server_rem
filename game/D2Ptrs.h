@@ -192,6 +192,8 @@ void SetupD2Pointers() {
 		EXASMPTR(D2NET, ReceivePacket_I, -10001) // k [isPacketCorrect]
 		EXASMPTR(D2GAME, FindFreeCoords_I, 0xE0000)
 		EXASMPTR(D2GAME, CheckXYOccupy_I, 0x1340)
+		EXASMPTR(D2GAME, SaveCharToDatabase_I, 0x54320)
+		EXASMPTR(D2GAME, SavePlayerData_I, 0x2C910)
 
 #ifndef __DEFINE_EXPTRS
 };

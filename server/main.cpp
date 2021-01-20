@@ -44,6 +44,7 @@ void load_server_config(std::string& filename) {
 	g_server_config.logging_output_to_stderr = config["logging"]["output_to_stderr"].as<bool>();
 	g_server_config.gs_max_games = config["gs"]["max_games"].as<int>();
 	g_server_config.gs_motd = config["gs"]["motd"].as<std::string>();
+	g_server_config.gs_save_all_other_players = config["gs"]["save_all_other_players"].as<bool>();
 	g_server_config.metrics_enabled = config["metrics"]["enabled"].as<bool>();
 	g_server_config.metrics_exposer_host = config["metrics"]["exposer_host"].as<std::string>();
 	g_server_config.metrics_exposer_port = config["metrics"]["exposer_port"].as<int>();

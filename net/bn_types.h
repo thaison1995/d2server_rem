@@ -35,14 +35,14 @@ typedef struct
 
 typedef struct {
 	bn_short	size;
-	bn_byte		type;
+	bn_short  	type;
 	bn_int		seqno;			/* seqno, set by the sender */
 } t_d2dbs_d2gs_header;
 
 #pragma pack(pop)
 
-#define CONNECT_CLASS_D2GS_TO_D2CS		0x91
-#define CONNECT_CLASS_D2GS_TO_D2DBS		0x88
+#define CONNECT_CLASS_D2GS_TO_D2CS		0x64
+#define CONNECT_CLASS_D2GS_TO_D2DBS		0x65
 
 #define MAX_GAMENAME_LEN			16
 #define MAX_GAMEPASS_LEN			16

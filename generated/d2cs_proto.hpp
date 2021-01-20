@@ -157,6 +157,32 @@ struct t_d2gs_d2cs_setgsinfo
   }
 };
 
+#define t_d2cs_d2gs_setgsinfo_typecode 18
+struct t_d2cs_d2gs_setgsinfo
+{
+  t_d2cs_d2gs_header h;
+  bn_int maxgame;
+  bn_int gameflag;
+
+  void ReadFromString(std::string& s) {
+    std::istringstream iss(s);
+    iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
+    iss.read((char*)&maxgame, sizeof(bn_int));
+    iss.read((char*)&gameflag, sizeof(bn_int));
+  }
+  std::string WriteAsString() {
+    h.type = 18;
+    std::ostringstream oss;
+    oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
+    oss.write((char*)&maxgame, sizeof(bn_int));
+    oss.write((char*)&gameflag, sizeof(bn_int));
+    h.size = (bn_short)oss.tellp();
+    oss.seekp(0);
+    oss.write((char*)&h.size, sizeof(bn_int));
+    return oss.str();
+  }
+};
+
 #define t_d2cs_d2gs_echoreq_typecode 19
 struct t_d2cs_d2gs_echoreq
 {
@@ -390,7 +416,6 @@ struct t_d2cs_d2gs_joingamereq
   t_d2cs_d2gs_header h;
   bn_int gameid;
   bn_int token;
-  bn_int vip_expire;
   string charname;
   string acctname;
   string client_ipaddr;
@@ -400,7 +425,6 @@ struct t_d2cs_d2gs_joingamereq
     iss.read((char*)&h, sizeof(t_d2cs_d2gs_header));
     iss.read((char*)&gameid, sizeof(bn_int));
     iss.read((char*)&token, sizeof(bn_int));
-    iss.read((char*)&vip_expire, sizeof(bn_int));
     std::getline(iss, charname, '\0');
     std::getline(iss, acctname, '\0');
     std::getline(iss, client_ipaddr, '\0');
@@ -411,7 +435,6 @@ struct t_d2cs_d2gs_joingamereq
     oss.write((char*)&h, sizeof(t_d2cs_d2gs_header));
     oss.write((char*)&gameid, sizeof(bn_int));
     oss.write((char*)&token, sizeof(bn_int));
-    oss.write((char*)&vip_expire, sizeof(bn_int));
     oss << charname;
     oss.put((char)0);
     oss << acctname;

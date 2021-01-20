@@ -46,6 +46,37 @@ static void __declspec(naked) __fastcall Helper_D2GAME_SendPacket(ClientData* pC
 	}
 }
 
+static void __declspec(naked) __fastcall Helper_D2GAME_SaveCharToDatabase(Game* game, ClientData* clientData, 
+	UnitAny* unit, const char* charname) {
+	__asm
+	{
+		push ebp
+		mov ebp, esp
+		add ebp, 4
+
+		mov eax, [ebp+8]
+
+		push ebx
+		mov ebx, ecx
+		push edi
+		mov edi, ecx
+		push esi
+		mov esi, [ebp+4]
+		mov ebp, edx
+
+		push 1
+		push eax
+		call D2Ptrs.D2GAME_SaveCharToDatabase_I
+
+		pop esi
+		pop edi
+		pop ebx
+		pop ebp
+
+		retn 8
+	}
+}
+
 static void Helper_SendChatMessagePacket(ClientData* client, std::string sender, std::string msg, int color) {
 
 	WORD packet_len = sizeof(D2GSPacketSrv26) + sender.length() + 1 + msg.length() + 1;
@@ -70,4 +101,39 @@ static void Helper_SendKick(ClientData* client) {
 	memset(packet, 0, packet_len);
 	packet->nHeader = 0x06;
 	Helper_D2GAME_SendPacket(client, (BYTE*)packet, packet_len);
+}
+
+static void __fastcall Helper_SaveAllPlayerDataInGame(ClientData* pClient, Game* pGame) {
+	ClientData* curr = pGame->pClientList;
+	while (curr) {
+		if (curr != pClient && curr->pPlayerUnit) {
+			Helper_D2GAME_SaveCharToDatabase(pGame, curr, curr->pPlayerUnit, curr->CharName);
+		}
+		curr = curr->ptPrevious;
+	}
+}
+
+static __declspec(naked) void  __fastcall Helper_SavePlayerDataIntercept_STUB() {
+	__asm
+	{
+		push ebp
+		mov ebp, esp
+		add ebp, 4
+
+		push ecx
+		push edx
+
+		mov ecx, [ebp + 4]
+		mov edx, [ebp + 8]
+		call Helper_SaveAllPlayerDataInGame
+
+		push[ebp + 8]
+		push[ebp + 4]
+		call D2Ptrs.D2GAME_SavePlayerData_I
+
+		pop edx
+		pop ecx
+		pop ebp
+		retn 8
+	}
 }
