@@ -37,6 +37,14 @@ namespace Net {
 				<< " for " << reply.charname << " result: " 
 				<< (reply.result == PROTO_SAVE_RESULT::D2DBS_SAVE_DATA_SUCCESS ? "SUCCESS" : "FAILURE");
 		});
+
+		net_client_.OnPacket(t_d2dbs_d2gs_echoreq_typecode, [this](std::string& s) {
+			t_d2dbs_d2gs_echoreq req;
+			req.ReadFromString(s);
+			t_d2gs_d2dbs_echoreply reply;
+			reply.h.seqno = req.h.seqno;
+			net_client_.Send(reply.WriteAsString());
+		});
 	}
 
 	void D2DBSClient::handle_reply_packet(std::string& s)
@@ -149,7 +157,7 @@ namespace Net {
 		req.charstatus = char_status;
 		req.charname = charname;
 		net_client_.Send(req.WriteAsString());
-		LOG(INFO) << "Sent ladder infromation for " << charname << "(*" << acctname << ")";
+		LOG(INFO) << "Sent ladder information for " << charname << "(*" << acctname << ")";
 	}
 
 }
